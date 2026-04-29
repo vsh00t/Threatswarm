@@ -1,0 +1,167 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(nmap *)",
+      "Bash(nuclei *)",
+      "Bash(amass *)",
+      "Bash(subfinder *)",
+      "Bash(httpx *)",
+      "Bash(feroxbuster *)",
+      "Bash(ffuf *)",
+      "Bash(sqlmap *)",
+      "Bash(hashcat *)",
+      "Bash(john *)",
+      "Bash(hydra *)",
+      "Bash(msfconsole *)",
+      "Bash(msfvenom *)",
+      "Bash(impacket-GetUserSPNs *)",
+      "Bash(impacket-GetNPUsers *)",
+      "Bash(impacket-secretsdump *)",
+      "Bash(impacket-psexec *)",
+      "Bash(impacket-wmiexec *)",
+      "Bash(impacket-smbexec *)",
+      "Bash(impacket-ntlmrelayx *)",
+      "Bash(impacket-ticketer *)",
+      "Bash(crackmapexec *)",
+      "Bash(bloodhound-python *)",
+      "Bash(responder *)",
+      "Bash(bettercap *)",
+      "Bash(arpspoof *)",
+      "Bash(tcpdump *)",
+      "Bash(tshark *)",
+      "Bash(wireshark *)",
+      "Bash(airodump-ng *)",
+      "Bash(aireplay-ng *)",
+      "Bash(airmon-ng *)",
+      "Bash(hcxdumptool *)",
+      "Bash(hostapd-wpe *)",
+      "Bash(reaver *)",
+      "Bash(ghidra *)",
+      "Bash(analyzeHeadless *)",
+      "Bash(radare2 *)",
+      "Bash(r2 *)",
+      "Bash(binwalk *)",
+      "Bash(strings *)",
+      "Bash(objdump *)",
+      "Bash(readelf *)",
+      "Bash(strace *)",
+      "Bash(ltrace *)",
+      "Bash(gdb *)",
+      "Bash(checksec *)",
+      "Bash(frida *)",
+      "Bash(frida-ps *)",
+      "Bash(adb *)",
+      "Bash(apktool *)",
+      "Bash(jadx *)",
+      "Bash(sliver-client *)",
+      "Bash(certipy *)",
+      "Bash(enum4linux-ng *)",
+      "Bash(ldapdomaindump *)",
+      "Bash(onesixtyone *)",
+      "Bash(snmpwalk *)",
+      "Bash(fierce *)",
+      "Bash(dnsx *)",
+      "Bash(theHarvester *)",
+      "Bash(shodan *)",
+      "Bash(waybackurls *)",
+      "Bash(arjun *)",
+      "Bash(dalfox *)",
+      "Bash(grpcurl *)",
+      "Bash(padbuster *)",
+      "Bash(testssl.sh *)",
+      "Bash(sslscan *)",
+      "Bash(lynis *)",
+      "Bash(oscap *)",
+      "Bash(kube-bench *)",
+      "Bash(trivy *)",
+      "Bash(kubectl *)",
+      "Bash(docker *)",
+      "Bash(mosquitto_sub *)",
+      "Bash(routersploit *)",
+      "Bash(arp-scan *)",
+      "Bash(curl *)",
+      "Bash(wget *)",
+      "Bash(python3 *)",
+      "Bash(python *)",
+      "Bash(ruby *)",
+      "Bash(go run *)",
+      "Bash(bash *)",
+      "Bash(sh *)",
+      "Bash(ssh *)",
+      "Bash(proxychains *)",
+      "Bash(proxychains4 *)",
+      "Bash(git *)",
+      "Bash(aws *)",
+      "Bash(az *)",
+      "Bash(gcloud *)",
+      "Bash(wevtutil *)",
+      "Bash(mkdir -p evidence/*)",
+      "Bash(mkdir -p reports/*)",
+      "Bash(mkdir -p loot/*)",
+      "Bash(mkdir -p scripts/*)",
+      "Read(**)",
+      "Write(**)",
+      "Edit(**)",
+      "Glob(**)",
+      "Grep(**)"
+    ],
+    "deny": [
+      "Bash(rm -rf *)",
+      "Bash(shred *)",
+      "Bash(wipe *)",
+      "Bash(dd if=/dev/zero *)",
+      "Read(.env)",
+      "Read(.env.*)",
+      "Read(secrets/**)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/scope_check.py",
+            "timeout": 10,
+            "statusMessage": "Checking scope..."
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/cmd_log.sh",
+            "timeout": 5,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/findings_sync.py",
+            "timeout": 30,
+            "statusMessage": "Syncing findings..."
+          }
+        ]
+      }
+    ]
+  },
+  "env": {
+    "SCOPE_FILE": "./scope.txt",
+    "EVIDENCE_DIR": "./evidence",
+    "LHOST": "10.10.14.1",
+    "LPORT": "4444",
+    "WORDLISTS": "/usr/share/seclists",
+    "PYTHONIOENCODING": "utf-8"
+  }
+}

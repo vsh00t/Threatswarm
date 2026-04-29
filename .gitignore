@@ -1,0 +1,83 @@
+# Cybersecurity Workspace — gitignore
+# Sensitive engagement data is NEVER committed
+
+# Evidence directory (contains raw tool output, pcaps, screenshots)
+evidence/
+!evidence/.gitkeep
+
+# Loot directory (hashed credentials, tokens)
+loot/
+!loot/.gitkeep
+
+# Draft reports (only final reports committed if desired)
+reports/drafts/
+
+# Packet captures
+*.pcap
+*.pcapng
+*.cap
+*.hccapx
+*.hc22000
+*.pcap.gz
+
+# Hash files
+*.hash
+*.hashes
+*.ntds
+*.dit
+
+# Private keys and certificates
+id_rsa
+id_rsa.pub
+id_ed25519
+id_ed25519.pub
+id_ecdsa
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+
+# Environment and secrets
+.env
+.env.*
+secrets/
+credentials*
+*_credentials*
+*password*
+!.claude/agents/*password*
+*passwd*
+apikeys*
+*.token
+
+# Log files (generated during engagement)
+*.log
+commands.log
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+
+# Tool-specific outputs that shouldn't be committed
+*.xml.bak
+nmap-*.xml
+masscan-*.xml
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Session files
+.claude/settings.local.json
