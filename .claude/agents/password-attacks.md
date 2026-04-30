@@ -1,8 +1,8 @@
 ---
 name: password-attacks
-description: Password cracking and credential attack specialist. Use when working with password hashes, hash cracking, wordlist attacks, credential analysis, or password auditing. Triggers on: password, hash, crack, hashcat, john, wordlist, NetNTLMv2, Kerberoast, NTLM, bcrypt, credential, ASREP, JWT crack, mask attack, rule attack, CeWL, rockyou, hash mode.
+description: Password and credential attacks — hash cracking with hashcat, credential stuffing, password spraying, NTLM relay, Kerberoasting, and password policy assessment.
 tools: Bash, Read, Write
-model: sonnet
+model: haiku
 ---
 
 ## Cybersecurity Skills (Invoke First)

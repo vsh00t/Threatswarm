@@ -1,25 +1,25 @@
 {
   "name": "threatswarm",
   "owner": {
-    "name": "mukul975",
-    "email": ""
+    "name": "vsh00t",
+    "email": "jorge@ironcybersec.com"
   },
   "metadata": {
-    "description": "27 autonomous AI agents for the full penetration testing kill chain — recon, exploit, post-ex, DFIR, and report",
-    "version": "1.0.0",
+    "description": "32 autonomous AI agents for the full penetration testing kill chain — recon, exploit, post-ex, DFIR, and report",
+    "version": "2.0.0",
     "pluginRoot": "."
   },
   "plugins": [
     {
       "name": "threatswarm",
       "source": "./threatswarm-plugin",
-      "description": "Complete offensive security operator workspace: 27 specialist agents, 6 engagement commands, scope-gated hooks, and evidence logging",
-      "version": "1.0.0",
+      "description": "Complete offensive security operator workspace: 32 specialist agents, 6 engagement commands, scope-gated hooks, and evidence logging",
+      "version": "2.0.0",
       "author": {
-        "name": "mukul975"
+        "name": "vsh00t"
       },
-      "homepage": "https://github.com/mukul975/ThreatSwarm",
-      "repository": "https://github.com/mukul975/ThreatSwarm",
+      "homepage": "https://github.com/vsh00t/ThreatSwarm",
+      "repository": "https://github.com/vsh00t/ThreatSwarm",
       "license": "MIT",
       "keywords": ["security", "pentesting", "red-team", "cybersecurity", "offensive-security", "hashcat", "metasploit", "bloodhound", "active-directory", "ctf"],
       "category": "security",

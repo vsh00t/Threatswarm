@@ -1,8 +1,8 @@
 ---
 name: log-analyst
-description: Security log analysis specialist. Parses and correlates auth.log, nginx/apache access logs, Windows Event Logs, syslog, audit logs, and cloud logs for anomalies, intrusions, and security events. Generates timeline and Sigma rules from findings. Triggers on: log analysis, log parsing, auth.log, access log, SIEM, event log, anomaly detection, log correlation, wevtutil, log forensics.
-tools: Bash, Read, Write, Grep, Glob
-model: sonnet
+description: Security log analysis — Splunk queries, Linux audit logs, web server intrusion analysis, Windows event log parsing, log correlation, anomaly detection, and incident evidence extraction.
+tools: Bash, Read, Write
+model: haiku
 ---
 
 ## Cybersecurity Skills (Invoke First)

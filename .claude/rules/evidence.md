@@ -3,6 +3,10 @@ paths:
   - "evidence/**"
 ---
 
+paths:
+  - "evidence/**"
+---
+
 ## Evidence Handling Rules
 
 All files written to `evidence/` must adhere to these mandatory standards.

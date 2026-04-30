@@ -1,13 +1,13 @@
 {
   "name": "threatswarm",
-  "version": "1.0.0",
-  "description": "Complete offensive security operator workspace: 27 specialist agents, 6 engagement commands, 5 reference skill libraries, scope-gated hooks, and evidence logging for professional penetration testing and red-team operations.",
+  "version": "2.0.0",
+  "description": "Complete offensive security operator workspace: 32 specialist agents, 6 engagement commands, 5 reference skill libraries, scope-gated hooks, and evidence logging for professional penetration testing and red-team operations.",
   "author": {
-    "name": "mukul975",
-    "url": "https://github.com/mukul975"
+    "name": "vsh00t",
+    "url": "https://github.com/vsh00t"
   },
-  "homepage": "https://github.com/mukul975/ThreatSwarm",
-  "repository": "https://github.com/mukul975/ThreatSwarm",
+  "homepage": "https://github.com/vsh00t/ThreatSwarm",
+  "repository": "https://github.com/vsh00t/ThreatSwarm",
   "license": "MIT",
   "keywords": [
     "security",

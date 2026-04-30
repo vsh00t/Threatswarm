@@ -3,15 +3,18 @@
 ThreatSwarm Build Script — Generates platform adapters from core/ content.
 
 Usage:
-    python3 scripts/build.py --all              # Generate all adapters
+    python3 scripts/build.py --all              # Generate all adapters + sync root
     python3 scripts/build.py --adapter claude-code  # Single adapter
     python3 scripts/build.py --adapter github-copilot
     python3 scripts/build.py --adapter opencode
     python3 scripts/build.py --adapter openclaw
+    python3 scripts/build.py --sync-root        # Sync core/ to root .claude/ and threatswarm-plugin/
     python3 scripts/build.py --list             # List available adapters
 
 Reads from core/agents/, core/rules/, core/commands/, core/hooks/ and generates
 platform-specific output in adapters/<name>/.
+
+--all always includes --sync-root to keep root directories in sync.
 """
 
 import argparse
@@ -25,6 +28,8 @@ from datetime import datetime, timezone
 BASE_DIR = Path(__file__).resolve().parent.parent
 CORE_DIR = BASE_DIR / "core"
 ADAPTERS_DIR = BASE_DIR / "adapters"
+ROOT_CLAUDE_DIR = BASE_DIR / ".claude"
+PLUGIN_DIR = BASE_DIR / "threatswarm-plugin"
 
 
 def load_registry():
@@ -67,6 +72,23 @@ def load_all_commands():
     return commands
 
 
+def get_agent_tools(agent):
+    """Map agent tags to Claude Code tools string."""
+    tags = agent["tags"]
+    if "reporting" in tags or "documentation" in tags:
+        return "Read, Write, Glob"
+    if "logging" in tags or "siem" in tags:
+        return "Bash, Read, Write, Grep, Glob"
+    has_glob = "recon" in tags or "osint" in tags or "enumeration" in tags
+    has_grep = "research" in tags or "vulnerability" in tags or "logging" in tags
+    tools = "Bash, Read, Write"
+    if has_glob:
+        tools += ", Glob"
+    if has_grep:
+        tools += ", Grep"
+    return tools
+
+
 def claude_frontmatter(name, description, tools, model):
     """Generate Claude Code agent frontmatter."""
     return f"""---
@@ -75,6 +97,44 @@ description: {description}
 tools: {tools}
 model: {model}
 ---"""
+
+
+def claude_command_frontmatter(cmd_name):
+    """Generate Claude Code command frontmatter."""
+    return f"""---
+description: {cmd_name} command
+allowed-tools: Bash, Read, Write
+---"""
+
+
+def claude_rule_frontmatter(rule_name):
+    """Generate Claude Code rule frontmatter with path scoping."""
+    rule_path_map = {
+        "evidence": "evidence/**",
+        "exploits": "**/*.py\n  - \"**/*.rb\"\n  - \"**/*.c\"",
+        "loot": "loot/**",
+        "reports": "reports/**",
+    }
+    paths = rule_path_map.get(rule_name, "**/*")
+    return f"""---
+paths:
+  - "{paths}"
+---"""
+
+
+def copy_tree(src: Path, dst: Path, pattern="*"):
+    """Recursively copy files from src to dst (flat or recursive by extension)."""
+    if not src.exists():
+        return 0
+    count = 0
+    for f in src.rglob(pattern):
+        if f.is_file():
+            rel = f.relative_to(src)
+            target = dst / rel
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(f.read_text(encoding="utf-8"), encoding="utf-8")
+            count += 1
+    return count
 
 
 # ─── Claude Code Adapter ─────────────────────────────────────────────────
@@ -93,20 +153,7 @@ def build_claude_code(registry):
         if not content:
             continue
 
-        # Map tags to Claude tools
-        tools = "Bash, Read, Write"
-        if "reporting" in agent["tags"] or "documentation" in agent["tags"]:
-            tools = "Read, Write, Glob"
-        elif "logging" in agent["tags"] or "siem" in agent["tags"]:
-            tools = "Bash, Read, Write, Grep, Glob"
-        else:
-            has_glob = "recon" in agent["tags"] or "osint" in agent["tags"] or "enumeration" in agent["tags"]
-            has_grep = "research" in agent["tags"] or "vulnerability" in agent["tags"] or "logging" in agent["tags"]
-            tools = "Bash, Read, Write"
-            if has_glob:
-                tools += ", Glob"
-            if has_grep:
-                tools += ", Grep"
+        tools = get_agent_tools(agent)
 
         frontmatter = claude_frontmatter(name, agent["description"], tools, agent["recommended_model"])
         full_content = f"{frontmatter}\n\n{content}"
@@ -131,9 +178,7 @@ def build_claude_code(registry):
     cmds_dir.mkdir(exist_ok=True)
     commands = load_all_commands()
     for cmd_name, cmd_content in commands.items():
-        # Add frontmatter with $ARGUMENTS back
-        frontmatter = f"---\ndescription: {cmd_name} command\nallowed-tools: Bash, Read, Write\n---"
-        # Replace <arguments> back to $ARGUMENTS for Claude Code
+        frontmatter = claude_command_frontmatter(cmd_name)
         claude_content = cmd_content.replace("<arguments>", "$ARGUMENTS")
         (cmds_dir / f"{cmd_name}.md").write_text(f"{frontmatter}\n\n{claude_content}", encoding="utf-8")
 
@@ -141,10 +186,8 @@ def build_claude_code(registry):
     rules_dir = out_dir / "rules"
     rules_dir.mkdir(exist_ok=True)
     rules = load_all_rules()
-    rule_path_map = {"evidence": "evidence/**", "exploits": "**/*.py\n  - \"**/*.rb\"\n  - \"**/*.c\"", "loot": "loot/**", "reports": "reports/**"}
     for rule_name, rule_content in rules.items():
-        paths = rule_path_map.get(rule_name, "**/*")
-        frontmatter = f"---\npaths:\n  - \"{paths}\"\n---"
+        frontmatter = claude_rule_frontmatter(rule_name)
         (rules_dir / f"{rule_name}.md").write_text(f"{frontmatter}\n\n{rule_content}", encoding="utf-8")
 
     # CLAUDE.md (generated version)
@@ -444,6 +487,154 @@ Exit code 0 = pass, 2 = scope violation.
     print(f"  ✓ OpenClaw adapter: 1 consolidated skill + {len(registry['agents'])} agent skills")
 
 
+# ─── Sync Root Directories ──────────────────────────────────────────────
+
+def sync_root(registry):
+    """Sync core/ content to root .claude/ and threatswarm-plugin/ directories.
+
+    This keeps the root-level Claude Code installation paths in sync with core/.
+    Handles: agents, hooks, commands, rules, skills, and settings.json permissions.
+    """
+    sync_targets = [
+        (".claude", ROOT_CLAUDE_DIR),
+        ("threatswarm-plugin", PLUGIN_DIR),
+    ]
+
+    total_agents = 0
+    total_hooks = 0
+    total_commands = 0
+    total_rules = 0
+    total_skills = 0
+
+    for label, base in sync_targets:
+        print(f"\n  Syncing → {label}/")
+
+        # ── Agents ──────────────────────────────────────────────────────
+        agents_dir = base / "agents"
+        agents_dir.mkdir(parents=True, exist_ok=True)
+        count = 0
+        for agent in registry["agents"]:
+            name = agent["name"]
+            content = load_agent_md(name)
+            if not content:
+                print(f"    [WARN] No core content for agent '{name}', skipping")
+                continue
+            tools = get_agent_tools(agent)
+            frontmatter = claude_frontmatter(name, agent["description"], tools, agent["recommended_model"])
+            full_content = f"{frontmatter}\n\n{content}"
+            (agents_dir / f"{name}.md").write_text(full_content, encoding="utf-8")
+            count += 1
+        total_agents += count
+        print(f"    ✓ {count} agents synced")
+
+        # ── Hooks ───────────────────────────────────────────────────────
+        hooks_dir = base / "hooks"
+        hooks_dir.mkdir(parents=True, exist_ok=True)
+        h_count = 0
+        src_hooks = CORE_DIR / "hooks"
+        if src_hooks.exists():
+            for hf in src_hooks.glob("*.py"):
+                (hooks_dir / hf.name).write_text(hf.read_text(encoding="utf-8"), encoding="utf-8")
+                h_count += 1
+        # Preserve cmd_log.sh (Claude-specific wiring)
+        if label == ".claude" and (ROOT_CLAUDE_DIR / "hooks" / "cmd_log.sh").exists():
+            # Already copied above if exists — it's the source of truth for .claude
+            pass
+        # Preserve hooks.json (Claude plugin wiring) in threatswarm-plugin
+        if label == "threatswarm-plugin" and (PLUGIN_DIR / "hooks" / "hooks.json").exists():
+            pass  # Don't overwrite hooks.json — it has ${CLAUDE_PLUGIN_ROOT} paths
+        total_hooks += h_count
+        print(f"    ✓ {h_count} hook scripts synced")
+
+        # ── Commands ────────────────────────────────────────────────────
+        cmds_dir = base / "commands"
+        cmds_dir.mkdir(parents=True, exist_ok=True)
+        commands = load_all_commands()
+        c_count = 0
+        for cmd_name, cmd_content in commands.items():
+            frontmatter = claude_command_frontmatter(cmd_name)
+            claude_content = cmd_content.replace("<arguments>", "$ARGUMENTS")
+            (cmds_dir / f"{cmd_name}.md").write_text(f"{frontmatter}\n\n{claude_content}", encoding="utf-8")
+            c_count += 1
+        total_commands += c_count
+        print(f"    ✓ {c_count} commands synced")
+
+        # ── Rules ───────────────────────────────────────────────────────
+        rules_dir = base / "rules"
+        if rules_dir.exists() or label == ".claude":
+            rules_dir.mkdir(parents=True, exist_ok=True)
+            rules = load_all_rules()
+            r_count = 0
+            for rule_name, rule_content in rules.items():
+                frontmatter = claude_rule_frontmatter(rule_name)
+                (rules_dir / f"{rule_name}.md").write_text(f"{frontmatter}\n\n{rule_content}", encoding="utf-8")
+                r_count += 1
+            total_rules += r_count
+            print(f"    ✓ {r_count} rules synced")
+
+        # ── Skills ──────────────────────────────────────────────────────
+        skills_src = CORE_DIR / "skills"
+        skills_dst = base / "skills"
+        if skills_src.exists():
+            s_count = copy_tree(skills_src, skills_dst, "*")
+            total_skills += s_count
+            print(f"    ✓ {s_count} skill files synced")
+
+    # ── Update settings.json with new agent tool permissions ──────────
+    update_settings_permissions(registry)
+
+    print(f"\n  Sync summary: {total_agents} agents, {total_hooks} hooks, "
+          f"{total_commands} commands, {total_rules} rules, {total_skills} skill files")
+
+
+def update_settings_permissions(registry):
+    """Add Bash permissions for tools used by new/updated agents."""
+    settings_path = ROOT_CLAUDE_DIR / "settings.json"
+    if not settings_path.exists():
+        print(f"  [WARN] settings.json not found at {settings_path}")
+        return
+
+    with open(settings_path) as f:
+        settings = json.load(f)
+
+    existing_perms = set(settings.get("permissions", {}).get("allow", []))
+
+    # New tools that the 5 new agents might need — check against existing
+    new_perms = [
+        # cloud-postex: cloud CLI tools (likely already covered)
+        "Bash(pacu *)",
+        "Bash(cloudquery *)",
+        # purple-team: atomic red team
+        "Bash(atomic-red-team *)",
+        "Bash(invoker *)",
+        # red-infra: infrastructure tools
+        "Bash(sliver *)",
+        # segmentation-tester: network validation
+        "Bash(nping *)",
+        "Bash(nmap --script *)",
+        # vuln-management: scanning tools
+        "Bash(nessuscli *)",
+        "Bash(tenable *)",
+    ]
+
+    added = []
+    for perm in new_perms:
+        if perm not in existing_perms:
+            existing_perms.add(perm)
+            added.append(perm)
+
+    if added:
+        settings["permissions"]["allow"] = sorted(existing_perms)
+        with open(settings_path, "w") as f:
+            json.dump(settings, f, indent=2)
+            f.write("\n")
+        print(f"  ✓ settings.json: added {len(added)} new Bash permissions")
+        for p in added:
+            print(f"      + {p}")
+    else:
+        print(f"  ✓ settings.json: permissions already up to date")
+
+
 # ─── Main ────────────────────────────────────────────────────────────────
 
 ADAPTERS = {
@@ -460,8 +651,9 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("--all", action="store_true", help="Generate all adapters")
+    group.add_argument("--all", action="store_true", help="Generate all adapters (includes --sync-root)")
     group.add_argument("--adapter", choices=ADAPTERS.keys(), help="Generate a specific adapter")
+    group.add_argument("--sync-root", action="store_true", help="Sync core/ to root .claude/ and threatswarm-plugin/")
     group.add_argument("--list", action="store_true", help="List available adapters")
     args = parser.parse_args()
 
@@ -478,6 +670,11 @@ def main():
         for name, builder in ADAPTERS.items():
             print(f"\nBuilding {name}...")
             builder(registry)
+        # --all always syncs root
+        print(f"\nSyncing root directories...")
+        sync_root(registry)
+    elif args.sync_root:
+        sync_root(registry)
     else:
         ADAPTERS[args.adapter](registry)
 

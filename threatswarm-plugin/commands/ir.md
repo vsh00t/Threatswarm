@@ -1,4 +1,8 @@
 ---
+description: ir command
+allowed-tools: Bash, Read, Write
+---
+
 description: Incident response workflow — triage, evidence collection, timeline, and IOC extraction
 allowed-tools: Bash, Read, Write, Glob
 ---

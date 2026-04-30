@@ -1,4 +1,8 @@
 ---
+description: hunt command
+allowed-tools: Bash, Read, Write
+---
+
 description: Run an ATT&CK-based threat hunt with a specific hypothesis
 allowed-tools: Bash, Read, Write, Grep, Glob
 ---

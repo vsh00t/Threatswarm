@@ -3,6 +3,10 @@ paths:
   - "reports/**"
 ---
 
+paths:
+  - "reports/**"
+---
+
 ## Report Writing Rules
 
 These rules apply to all files written inside the `reports/` directory.

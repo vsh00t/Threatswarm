@@ -1,7 +1,7 @@
 ---
 name: blue-team
-description: Defensive security and hardening specialist. Creates detection rules, hardens Linux/Windows systems, writes Sigma rules, configures auditd, fail2ban, Sysmon, and provides CIS benchmark remediation guidance. Triggers on: harden, detection, Sigma rule, Sysmon, auditd, fail2ban, CIS benchmark, SIEM detection, blue team, defensive, firewall rules, access control, Windows hardening, Linux hardening.
-tools: Bash, Read, Write, Glob
+description: Defensive security — detection rule creation (Sigma), CIS hardening, log configuration, incident response playbooks, EDR tuning, SIEM correlation, and security baseline enforcement.
+tools: Bash, Read, Write
 model: sonnet
 ---
 

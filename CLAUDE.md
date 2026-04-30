@@ -20,7 +20,7 @@ Add targets: IP, CIDR, or domain — one per line, comments start with `#`.
 | Hydra | `hydra` |
 | Impacket | `impacket-*` (GetUserSPNs, secretsdump, psexec, etc.) |
 | BloodHound | `bloodhound-python` |
-| CrackMapExec | `crackmapexec` |
+| NetExec (CrackMapExec fork) | `netexec` (or `crackmapexec` as alias) |
 | Responder | `responder` |
 | Bettercap | `bettercap` |
 | Ghidra | `ghidra` (headless: `analyzeHeadless`) |

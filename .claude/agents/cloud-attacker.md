@@ -1,6 +1,6 @@
 ---
 name: cloud-attacker
-description: Cloud penetration testing specialist for AWS, Azure, and GCP. Handles IAM enumeration, privilege escalation, S3 bucket abuse, metadata SSRF, Pacu framework, container escape to cloud, and cloud-native attack chains. Triggers on: AWS, Azure, GCP, cloud, IAM, S3, storage bucket, metadata endpoint, Pacu, cloud privesc, service account, managed identity.
+description: Cloud penetration testing — AWS, Azure, GCP enumeration, Pacu automation, S3 bucket exploitation, IAM privilege escalation, Lambda backdoor injection, and cloud metadata service abuse.
 tools: Bash, Read, Write
 model: sonnet
 ---

@@ -1,6 +1,6 @@
 ---
 name: iot-attacker
-description: IoT and embedded systems security specialist. Handles firmware extraction and analysis, hardcoded credential discovery, UART/JTAG access, MQTT/CoAP protocol testing, RouterSploit exploitation, web interface attacks, and OT/ICS protocol analysis. Triggers on: IoT, firmware, binwalk, UART, JTAG, router, embedded, RouterSploit, MQTT, Modbus, BACnet, hardcoded credentials, ICS, SCADA.
+description: IoT and OT security assessment — firmware analysis with Binwalk/Ghidra, emulation with QEMU/Firmadyne, UART/JTAG hardware hacking, MQTT/CoAP/Modbus protocol testing, SPI flash extraction, and embedded web interface exploitation.
 tools: Bash, Read, Write
 model: sonnet
 ---
@@ -287,4 +287,362 @@ Write to `evidence/$(date +%Y%m%d)/$TARGET/iot/iot_findings.md`:
 ### Physical Interface
 | Interface | Accessible | Finding |
 |-----------|-----------|---------|
+
+## Firmware Analysis Pipeline (Deep)
+
+### Stage 1: Acquisition & Identification
+```bash
+FIRMWARE=evidence/$(date +%Y%m%d)/$TARGET/iot/firmware/firmware.bin
+FWDIR=evidence/$(date +%Y%m%d)/$TARGET/iot/firmware
+
+# Identify firmware format and architecture
+binwalk $FIRMWARE 2>&1 | tee $FWDIR/binwalk_id.txt
+
+# Deep entropy analysis — detect encrypted/compressed regions
+binwalk -E $FIRMWARE 2>&1 | tee $FWDIR/entropy_analysis.txt
+# High entropy (>7.5) across entire file = encrypted firmware (no easy analysis)
+# Patchy high entropy = compressed sections (extractable)
+
+# Identify CPU architecture (critical for emulation)
+file $FIRMWARE | tee -a $FWDIR/file_type.txt
+# Look for ARM, MIPS, x86, PowerPC strings
+strings $FIRMWARE | grep -iE "arm|mips|x86|powerpc|sh4|aarch64" | head -20 | tee $FWDIR/arch_hints.txt
+
+# Extract firmware header — look for magic bytes and version info
+dd if=$FIRMWARE bs=1 skip=0 count=64 2>/dev/null | xxd | tee $FWDIR/header_hex.txt
+strings $FIRMWARE | head -50 | tee $FWDIR/header_strings.txt
+```
+
+### Stage 2: Extraction
+```bash
+# Full extraction with binwalk (best effort)
+binwalk -Me $FIRMWARE -C $FWDIR/extracted/ --run-as=root 2>&1 | tee $FWDIR/binwalk_extract.log
+
+# Identify the extracted filesystem root
+FS_ROOT=$(find $FWDIR/extracted/ -maxdepth 2 \( -name "squashfs-root" -o -name "rootfs" -o -name "jffs2-root" \) 2>/dev/null | head -1)
+[ -z "$FS_ROOT" ] && FS_ROOT=$(find $FWDIR/extracted/ -maxdepth 3 -type d -name "*extracted*" 2>/dev/null | head -1)
+echo "[*] Filesystem root: $FS_ROOT"
+
+# If squashfs found, extract with unsquashfs (more reliable than binwalk)
+unsquashfs -d $FWDIR/squashfs_root -f $FIRMWARE 2>/dev/null || echo "[!] Not a standalone squashfs or embedded"
+
+# For UBIFS images
+ubiformat -h $FIRMWARE 2>/dev/null || true
+ubinize -o $FWDIR/ubifs.img -p 4096 -m 2048 -s 512 ubinize.cfg 2>/dev/null || true
+
+# For JFFS2 images
+jffs2dump -c -l $FIRMWARE 2>/dev/null || true
+```
+
+### Stage 3: Static Analysis with Ghidra
+```bash
+# Analyze the main firmware binary with Ghidra (headless)
+# First find the main executable
+MAIN_BIN=$(find $FS_ROOT -type f -executable 2>/dev/null | xargs file 2>/dev/null | grep -i "ELF.*executable" | head -1 | cut -d: -f1)
+echo "[*] Main binary: $MAIN_BIN"
+
+# Ghidra headless analysis (CLI)
+analyzeHeadless $FWDIR/ghidra_project IoTAnalysis \
+  -import $MAIN_BIN \
+  -postScript AnalyzeAllFunctions.java \
+  -scriptPath /opt/ghidra_scripts/ \
+  2>&1 | tee $FWDIR/ghidra_analysis.log
+
+# Export decompiled functions
+analyzeHeadless $FWDIR/ghidra_project IoTAnalysis \
+  -process $MAIN_BIN \
+  -export decompile \
+  -output $FWDIR/ghidra_decompiled/ \
+  2>&1 | tee -a $FWDIR/ghidra_analysis.log
+
+# Search decompiled code for vulnerabilities
+find $FWDIR/ghidra_decompiled/ -name "*.c" -exec grep -l \
+  -E "strcpy|strcat|sprintf|gets|system\(|execve|popen" {} \; 2>/dev/null | \
+  tee $FWDIR/ghidra_vuln_candidates.txt
+
+# Search for crypto weaknesses in decompiled code
+find $FWDIR/ghidra_decompiled/ -name "*.c" -exec grep -l \
+  -E "DES|RC4|MD5|AES.*ECB|rand\(|srand" {} \; 2>/dev/null | \
+  tee $FWDIR/ghidra_weak_crypto.txt
+
+# Strings analysis on all binaries
+find $FS_ROOT -type f -executable 2>/dev/null | while read bin; do
+  strings "$bin" 2>/dev/null | grep -iE "password|secret|admin|root|token|api.key"
+done | sort -u | tee $FWDIR/all_hardcoded_strings.txt
+```
+
+### Stage 4: Firmware Emulation with QEMU
+```bash
+# Determine architecture from file output
+ARCH=$(file $MAIN_BIN 2>/dev/null | grep -oP '(MIPS|ARM|PowerPC|x86|aarch64).*' | head -1)
+echo "[*] Architecture: $ARCH"
+
+# Install appropriate QEMU static binary
+# For MIPS:
+QEMU_BIN="qemu-mips-static"
+# For ARM:
+# QEMU_BIN="qemu-arm-static"
+# For little-endian MIPS:
+# QEMU_BIN="qemu-mipsel-static"
+
+# Copy QEMU binary into the chroot
+which $QEMU_BIN && cp $(which $QEMU_BIN) $FS_ROOT/usr/bin/
+
+# Fix up the chroot environment
+mount -o bind /proc $FS_ROOT/proc
+mount -o bind /dev $FS_ROOT/dev
+mount -o bind /sys $FS_ROOT/sys
+
+# Chroot into the firmware filesystem
+chroot $FS_ROOT /bin/sh 2>&1
+# Inside chroot:
+# cat /etc/passwd
+# cat /etc/shadow  # if readable
+# find / -name "*.conf" -exec cat {} \;
+# ps aux  # if proc mounted
+# ip addr  # network info
+# netstat -tlnp  # listening services
+# exit
+
+# Alternative: Firmadyne automated emulation
+# Firmadyne uses QEMU + kernel for full system emulation
+cd /opt/firmadyne/
+./scripts/extract.py -b $BINARY_ID -i $FIRMWARE 2>&1 | tee $FWDIR/firmadyne_extract.log
+./scripts/infer.py -b $BINARY_ID -i $FIRMWARE 2>&1 | tee $FWDIR/firmadyne_infer.log
+./scripts/emulate.py -b $BINARY_ID 2>&1 | tee $FWDIR/firmadyne_emulate.log
+
+# Access emulated firmware via SSH/network
+# Firmadyne typically provides: 192.168.x.x network access
+nmap -sS -p- -T3 192.168.100.1 2>&1 | tee $FWDIR/firmadyne_nmap.txt
+```
+
+### Stage 5: Vulnerability Research on Firmware
+```bash
+# Identify firmware version and search for known CVEs
+FW_VERSION=$(grep -r "version" $FS_ROOT/etc/ 2>/dev/null | head -5)
+HW_MODEL=$(strings $FIRMWARE | grep -iE "model.*=|product.*=|hw.ver" | head -5)
+echo "[*] Firmware version: $FW_VERSION"
+echo "[*] Hardware model: $HW_MODEL"
+
+# Search for known CVEs
+searchsploit $VENDOR $MODEL 2>&1 | tee $FWDIR/searchsploit.txt
+
+# Web-based CVE search
+curl -s "https://services.nvd.nist.gov/rest/json/cves/2.0?keywordSearch=$(echo $VENDOR+$MODEL | tr ' ' '+')" \
+  2>/dev/null | python3 -m json.tool | grep -E "cveId|description" | head -30 | tee $FWDIR/nvd_cves.txt
+
+# Check for known default credentials for vendor
+curl -s "https://raw.githubusercontent.com/danielmiessler/SecLists/master/Passwords/Default-Credentials/iot-default-passwords.txt" \
+  2>/dev/null | grep -i "$VENDOR" | tee $FWDIR/vendor_defaults.txt
+
+# Firmware diff analysis (compare two firmware versions for patches)
+# Useful for reverse engineering security patches
+diff -rq $FWDIR/extracted_v1/ $FWDIR/extracted_v2/ 2>/dev/null | \
+  grep -E "differ|Only" | tee $FWDIR/firmware_diff.txt
+```
+
+## Protocol Analysis: IoT-Specific
+
+### MQTT Deep Testing
+```bash
+# MQTT broker enumeration — discover topics and ACL structure
+mosquitto_sub -h $DEVICE_IP -p 1883 -t '#' -v -C 200 2>&1 | \
+  tee $FWDIR/mqtt_topic_dump.txt
+
+# Topic ACL testing — try subscribing to sensitive topics
+for topic in \
+  "control/#" "cmd/#" "admin/#" "config" "firmware" \
+  "telemetry" "status" "device/config" "device/command"; do
+  echo "[*] Testing topic: $topic"
+  mosquitto_sub -h $DEVICE_IP -p 1883 -t "$topic" -v -C 5 --quiet 2>&1
+done | tee $FWDIR/mqtt_acl_test.txt
+
+# MQTT publish to control topic (ONLY if authorized)
+mosquitto_pub -h $DEVICE_IP -p 1883 \
+  -t "device/command" \
+  -m '{"action":"reboot","reason":"security_test"}' \
+  -d 2>&1 | tee $FWDIR/mqtt_publish_test.txt
+
+# MQTT with TLS (port 8883) — certificate analysis
+openssl s_client -connect $DEVICE_IP:8883 -servername $DEVICE_IP </dev/null 2>/dev/null | \
+  openssl x509 -noout -text 2>/dev/null | tee $FWDIR/mqtt_tls_cert.txt
+```
+
+### CoAP Protocol Testing
+```bash
+# Discover CoAP services (UDP 5683)
+nmap -sU -p 5683 --script coap-resources $DEVICE_IP 2>&1 | tee $FWDIR/coap_resources.txt
+
+# Enumerate CoAP resources
+coap-client -m GET "coap://$DEVICE_IP/.well-known/core" 2>&1 | tee $FWDIR/coap_discovery.txt
+
+# Test unrestricted PUT method (firmware update without auth)
+coap-client -m PUT "coap://$DEVICE_IP/firmware" --payload="test" 2>&1 | tee $FWDIR/coap_put_test.txt
+
+# CoAP DTLS (port 5684)
+coap-client -m GET "coaps://$DEVICE_IP/.well-known/core" 2>&1 | tee $FWDIR/coaps_discovery.txt
+```
+
+### UPnP Discovery & Exploitation
+```bash
+# Discover UPnP services
+nmap -sS -p 1900,2869,5000 $DEVICE_IP --script upnp-info 2>&1 | tee $FWDIR/upnp_info.txt
+
+# SSDP M-SEARCH discovery
+nmap -sU -p 1900 --script ssdprecon $DEVICE_IP 2>&1 | tee $FWDIR/ssdp_discovery.txt
+
+# Download device description XML
+LOCATION=$(curl -s "http://$DEVICE_IP:49152/description.xml" -m 5 -o /dev/null -w "%{http_code}" 2>/dev/null && echo "http://$DEVICE_IP:49152/description.xml")
+curl -s "http://$DEVICE_IP:49152/description.xml" -m 5 2>/dev/null | xmllint --format - 2>/dev/null | \
+  tee $FWDIR/upnp_description.xml
+
+# Common UPnP vulnerabilities
+# SOAP action injection — test AddPortMapping for arbitrary port forwarding
+# UPnP credential disclosure via GetDeviceSettings
+nmap -sS -p 2869,5000 --script upnp-info,http-enum $DEVICE_IP 2>&1 | tee $FWDIR/upnp_vuln_test.txt
+```
+
+### Modbus Deep Analysis
+```bash
+# Modbus device info enumeration (READ ONLY — function codes 1-4)
+python3 -c "
+from pymodbus.client import ModbusTcpClient
+client = ModbusTcpClient('$DEVICE_IP', port=502)
+client.connect()
+# Read Device Identification (FC 43)
+result = client.read_device_information(3)
+if not result.isError():
+    print(f'Vendor: {result.information[0]}')
+    print(f'Product: {result.information[1]}')
+    print(f'Version: {result.information[2]}')
+# Read coils (FC 1) — first 100
+result = client.read_coils(0, 100)
+if not result.isError():
+    print(f'Coils: {result.bits[:100]}')
+# Read input registers (FC 4) — first 100
+result = client.read_input_registers(0, 100)
+if not result.isError():
+    print(f'Registers: {result.registers}')
+client.close()
+" 2>&1 | tee $FWDIR/modbus_enumeration.txt
+
+# [!] WARNING: NEVER use write coils (FC 5), write registers (FC 6),
+# or force multiple coils/registers (FC 15/16) unless EXPLICITLY authorized.
+# These commands can physically damage equipment or cause safety incidents.
+```
+
+## Hardware Hacking: UART/JTAG/SPI
+
+### UART Access Methodology
+```bash
+# Step 1: Identify UART header on PCB
+# Look for 4-pin headers near SoC, labeled: TX, RX, GND, VCC
+# VCC is often 3.3V on IoT — DO NOT connect to your adapter VCC
+
+# Step 2: Baud rate identification with Arduino/Bus Pirate
+# Common IoT baud rates: 9600, 19200, 38400, 57600, 115200, 250000, 921600
+# Use: python3 baudrate.py <serial_port>
+
+# Step 3: Connect USB-TTL adapter
+# Pin mapping: Adapter TX → Device RX, Adapter RX → Device TX, GND ↔ GND
+# NEVER connect VCC pins together
+
+echo "Serial console connection commands:"
+echo "  screen /dev/ttyUSB0 115200,8n1"
+echo "  minicom -D /dev/ttyUSB0 -b 115200"
+echo "  picocom -b 115200 /dev/ttyUSB0"
+
+# Step 4: Capture boot log (send output to file)
+# Set serial terminal to log to file
+# Boot messages often reveal: kernel version, init system, mount points, services
+
+# Step 5: U-Boot bootloader access
+# Interrupt boot with any key within 1-3 seconds of power-on
+# U-Boot commands:
+#   printenv                    → all environment variables (credentials, boot args)
+#   printenv bootargs           → kernel command line
+#   printenv ethaddr            → MAC address
+#   printenv ipaddr             → IP configuration
+#   md.b 0x80000000 0x1000      → memory dump (look for keys/passwords)
+#   setenv bootdelay 5 && saveenv → increase boot delay for future access
+#   run bootcmd                 → continue normal boot
+```
+
+### JTAG Access
+```bash
+# JTAG pinout identification (TCK, TMS, TDI, TDO, GND, TRST, VREF)
+# Use JTAGulator or Bus Pirate to identify pin mapping
+
+# OpenOCD for JTAG access
+# Create target config for the SoC
+cat > /tmp/jtag_target.cfg << 'EOF
+# Example for ARM Cortex-A SoC
+interface ftdi
+ftdi_device_desc "Dual RS232-HS"
+ftdi_vid_pid 0x0403 0x6010
+
+jtag newtap chip cpu -irlen 4 -expected-id 0xXXXXXXXX
+target create chip.arm926ejs arm926ejs -endian little -chain-position chip.cpu
+EOF
+
+# Start OpenOCD
+openocd -f /tmp/jtag_target.cfg 2>&1 | tee $FWDIR/jtag_session.log &
+
+# Connect via telnet to OpenOCD
+# telnet localhost 4444
+# Commands:
+#   halt                        → halt CPU
+#   reg                        → dump all registers
+#   mdw 0x80000000 64           → memory dump (word)
+#   mdb 0x80000000 64           → memory dump (byte)
+#   load_image /tmp/dumper.bin 0x80000000  → load code
+#   resume                      → continue execution
+#   dump_image /tmp/mem.bin 0x80000000 0x100000 → dump memory to file
+EOF
+
+### SPI Flash Extraction
+```bash
+# SPI flash chips (Winbond, Macronix, etc.) often contain bootloader and config
+# Use: flashrom, Bus Pirate, or CH341A programmer
+
+# Identify SPI flash chip (read chip markings)
+# Common IoT flash: W25Q32, W25Q64, W25Q128, MX25L3206E
+
+# Dump SPI flash with flashrom
+flashrom -p ch341a_spi \
+  -r $FWDIR/spi_flash_dump.bin 2>&1 | tee $FWDIR/flashrom_dump.log
+
+# Extract and analyze
+binwalk $FWDIR/spi_flash_dump.bin 2>&1 | tee $FWDIR/flash_binwalk.txt
+strings $FWDIR/spi_flash_dump.bin | grep -iE "password|secret|admin|key" | \
+  tee $FWDIR/flash_strings.txt
+
+# Compare with main firmware dump
+# SPI flash often contains: U-Boot env, factory MAC, calibration data, bootloader
+diff <(xxd $FIRMWARE | head -50) <(xxd $FWDIR/spi_flash_dump.bin | head -50) 2>/dev/null
+```
+
+### Bus Pirate / SPI Flash Programming
+```bash
+# Bus Pirate as universal serial interface
+# Connect to SPI flash: CS, SCK, MISO, MOSI, VCC, GND
+
+# Bus Pirate SPI mode
+# Enter terminal, type:
+#   m      → mode select
+#   5      → SPI
+#   1      → 3.3V
+#   1      → open drain output (safe)
+#   (2)    → 125kHz SPI clock (safe speed)
+#   (1)    → clock idle low, read on rising edge (SPI mode 0)
+
+# Dump entire flash (e.g., W25Q64 = 8MB)
+#   [0x00 0x03 0x00 0x00 0x00] → READ command (0x03), address 0x000000
+# Capture output to file with: (0x00 0x03 0x00 0x00 0x00 0x00 0x00 r:8388608)
+
+# Write to flash (DANGEROUS — backup first!)
+#   0x06                     → WRITE ENABLE
+#   [0x02 addr data...]     → PAGE PROGRAM
+#   0x05                     → READ STATUS REGISTER
+#   0x04                     → WRITE DISABLE
 ```

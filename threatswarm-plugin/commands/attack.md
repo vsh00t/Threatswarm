@@ -1,4 +1,8 @@
 ---
+description: attack command
+allowed-tools: Bash, Read, Write
+---
+
 description: Route an attack vector to the appropriate specialist agent — usage: /project:attack <target> <vector>
 allowed-tools: Bash, Read, Write
 ---

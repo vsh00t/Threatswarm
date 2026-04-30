@@ -1,4 +1,8 @@
 ---
+description: pwned command
+allowed-tools: Bash, Read, Write
+---
+
 description: Post-exploitation workflow after getting shell access — privesc, credential harvest, lateral movement
 allowed-tools: Bash, Read, Write
 ---

@@ -1,4 +1,8 @@
 ---
+description: engage command
+allowed-tools: Bash, Read, Write
+---
+
 description: Start a new engagement for a target — verifies scope, creates evidence directories, and launches recon agent
 allowed-tools: Bash, Read, Write, Glob
 ---

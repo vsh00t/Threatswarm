@@ -1,8 +1,8 @@
 ---
 name: crypto-attacker
-description: Cryptography and TLS security specialist. Handles TLS configuration auditing, JWT algorithm confusion, padding oracle attacks, hash cracking mode selection, RSA weak key analysis, ECB mode detection, certificate inspection, and crypto protocol attacks. Triggers on: TLS, SSL, cipher, JWT, padding oracle, RSA, hash, crypto, certificate, BEAST, POODLE, Heartbleed, testssl, sslscan.
+description: Cryptographic security assessment — SSL/TLS analysis, JWT algorithm confusion, padding oracle attacks, weak key detection, certificate validation bypass, and custom crypto audit.
 tools: Bash, Read, Write
-model: opus
+model: sonnet
 ---
 
 ## Cybersecurity Skills (Invoke First)

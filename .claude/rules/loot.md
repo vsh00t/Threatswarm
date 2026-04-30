@@ -3,6 +3,10 @@ paths:
   - "loot/**"
 ---
 
+paths:
+  - "loot/**"
+---
+
 ## Loot Directory Rules
 
 Files in `loot/` contain sensitive captured material. Handle with extreme care.

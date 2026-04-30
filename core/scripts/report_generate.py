@@ -92,10 +92,23 @@ def parse_markdown_findings(filepath: Path) -> list:
     for section in sections:
         # Detect finding headers
         # Pattern: ## [SEVERITY] Title or ## TS-NNNN Title
+        # Use word boundary to avoid matching INFO inside "Information" etc.
         header_match = re.match(
             r"\[?(CRITICAL|HIGH|MEDIUM|LOW|INFO)\]?\s*(?:TS-\d+[:\s-]*)?(.+)",
             section[:120], re.IGNORECASE
         )
+
+        # Validate: severity must appear at start of line or after bracket
+        if header_match:
+            matched_sev = header_match.group(1)
+            # Reject if the match consumed text that isn't actually a severity tag
+            # e.g., "Information Gathering" should not match "INFO"
+            if matched_sev.upper() == "INFO":
+                # INFO must be bracketed [INFO] or be the only word before content
+                pre = section[:header_match.start()]
+                post_start = header_match.end()
+                if not section.lstrip().startswith("[") and not section.lstrip().startswith("INFO"):
+                    header_match = None
 
         if header_match:
             if current_finding:
@@ -153,23 +166,39 @@ def parse_markdown_findings(filepath: Path) -> list:
     return findings
 
 
+def _get_ci(d: dict, key: str, default=None):
+    """Case-insensitive dict lookup."""
+    if not d:
+        return default
+    lower_key = key.lower()
+    for k, v in d.items():
+        if k.lower() == lower_key:
+            return v
+    return default
+
+
 def parse_json_finding(data: dict) -> dict:
-    """Normalize a JSON finding into the standard finding format."""
+    """Normalize a JSON finding into the standard finding format.
+
+    Handles case-insensitive field names since evidence files may use
+    "Severity", "SEVERITY", or "severity" interchangeably.
+    """
+    raw_severity = _get_ci(data, "severity", "INFO")
     return {
-        "id": data.get("id"),
-        "title": data.get("title", "Untitled"),
-        "severity": data.get("severity", "INFO").upper(),
-        "cvss_score": data.get("cvss_score"),
-        "cvss_vector": data.get("cvss_vector"),
-        "attack_techniques": [data["attack_technique"]] if data.get("attack_technique") else [],
-        "cve": data.get("cve"),
-        "target": data.get("target"),
-        "description": data.get("description"),
-        "remediation": data.get("remediation"),
-        "steps_to_reproduce": data.get("steps_to_reproduce"),
-        "business_impact": data.get("business_impact"),
-        "references": data.get("references", []),
-        "evidence_path": data.get("evidence_path"),
+        "id": _get_ci(data, "id"),
+        "title": _get_ci(data, "title", "Untitled"),
+        "severity": str(raw_severity).upper(),
+        "cvss_score": _get_ci(data, "cvss_score"),
+        "cvss_vector": _get_ci(data, "cvss_vector"),
+        "attack_techniques": [_get_ci(data, "attack_technique")] if _get_ci(data, "attack_technique") else [],
+        "cve": _get_ci(data, "cve"),
+        "target": _get_ci(data, "target"),
+        "description": _get_ci(data, "description"),
+        "remediation": _get_ci(data, "remediation"),
+        "steps_to_reproduce": _get_ci(data, "steps_to_reproduce"),
+        "business_impact": _get_ci(data, "business_impact"),
+        "references": _get_ci(data, "references", []),
+        "evidence_path": _get_ci(data, "evidence_path"),
         "source_format": "json",
     }
 

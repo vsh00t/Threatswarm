@@ -1,4 +1,8 @@
 ---
+description: report command
+allowed-tools: Bash, Read, Write
+---
+
 description: Generate a professional penetration test report from all evidence files
 allowed-tools: Read, Write, Glob
 ---
