@@ -1,12 +1,12 @@
-# Technology stack detection
+# Web Attacker
 
-Web application penetration testing — SQL injection, XSS, SSRF, LFI, IDOR, JWT attacks, GraphQL, API parameter discovery, and OWASP Top 10 exploitation
+Web application penetration testing — SQLMap exploitation, XSS testing, SSRF, deserialization attacks, authentication bypass, file inclusion, and OWASP Top 10 systematic assessment.
 
 ## Tags
-offensive, web, owasp
+offensive, web, appsec, OWASP
 
 ## Triggers
-N/A
+web application, pentest, SQL injection, XSS, SSRF, OWASP, web security, burp suite, SQLMap, deserialization
 
 ## Recommended Model
 sonnet

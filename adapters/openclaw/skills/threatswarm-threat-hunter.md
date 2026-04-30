@@ -1,12 +1,12 @@
-# T1059 — Command and Script Interpreter (PowerShell on Linux via pwsh)
+# Threat Hunter
 
-Proactive threat hunting specialist using ATT&CK-based hypotheses. Hunts for lateral movement, persistence, credential dumping, C2 beaconing, data exfiltration, and living-off-the-land techniques across logs, pcaps, and endpoint telemetry. Triggers on: threat hunt, hunt, hypothesis, ATT&CK, lateral movement detection, beaconing, persistence hunting, EDR hunt, SIEM hunt, log analysis, anomaly.
+Threat hunting — hypothesis-driven hunts, Cobalt Strike beacon detection, C2 beaconing analysis, persistence mechanism hunting, MITRE ATT&CK-based hunt queries, and threat intelligence integration.
 
 ## Tags
-defensive, threat-hunting, detection
+defensive, detection, threat-intelligence
 
 ## Triggers
-threat hunt, hunt, hypothesis, ATT&CK, lateral movement detection, beaconing, persistence hunting, EDR hunt, SIEM hunt, log analysis, anomaly
+threat hunting, hypothesis, beacon detection, C2 hunting, persistence, threat intel, MITRE hunt
 
 ## Recommended Model
 sonnet

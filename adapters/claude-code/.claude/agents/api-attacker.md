@@ -1,6 +1,6 @@
 ---
 name: api-attacker
-description: API security testing specialist for REST, GraphQL, gRPC, and WebSocket APIs. Handles BOLA/IDOR, mass assignment, authentication bypass, rate limit evasion, JWT attacks, GraphQL introspection abuse, API enumeration, and OWASP API Top 10. Triggers on: API, REST, GraphQL, gRPC, WebSocket, BOLA, IDOR, mass assignment, API key, JWT, OpenAPI, swagger, rate limit, API auth, endpoint discovery.
+description: API security testing — REST/GraphQL/SOAP testing, IDOR, BOLA/BFLA, broken authentication, rate limiting bypass, mass assignment, API key leakage, and API schema fuzzing.
 tools: Bash, Read, Write
 model: sonnet
 ---

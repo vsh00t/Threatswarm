@@ -1,12 +1,12 @@
-# ARP sweep — discover live hosts
+# Network Operator
 
-Network penetration testing specialist for ARP attacks, MitM, packet capture, SNMP enumeration, SMB relay, Responder credential capture, and network-level attacks. Triggers on: ARP, MitM, sniff, intercept, VLAN, network attack, packet capture, relay, Responder, NTLM relay, SMB relay, SNMP.
+Network-level attacks — ARP spoofing, man-in-the-middle interception, SMB relay, LLMNR/NBT-NS poisoning, VLAN hopping, and network traffic analysis with tshark.
 
 ## Tags
-offensive, network, mitm
+offensive, network, MITM, red-team
 
 ## Triggers
-ARP, MitM, sniff, intercept, VLAN, network attack, packet capture, relay, Responder, NTLM relay, SMB relay, SNMP
+network attack, ARP spoof, MITM, SMB relay, LLMNR, NBT-NS, VLAN hopping, network traffic, packet capture
 
 ## Recommended Model
 sonnet

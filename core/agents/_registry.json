@@ -1,712 +1,308 @@
 {
-  "version": "1.0.0",
-  "description": "ThreatSwarm Agent Registry \u2014 metadata for all pentesting agents",
+  "version": "2.0",
+  "generated": "2026-04-30",
+  "total": 32,
   "agents": [
     {
       "name": "active-directory",
-      "display_name": "SMB null session / basic enum",
-      "description": "Active Directory and Windows domain attack specialist. Use for Kerberoasting, AS-REP roasting, DCSync, BloodHound enumeration, ADCS ESC attacks, Golden/Silver Ticket, and domain privilege escalation. Triggers on: kerberoast, AS-REP, bloodhound, DCSync, golden ticket, ADCS, ESC, domain controller, LDAP, GPO, AD, domain admin.",
-      "triggers": [
-        "kerberoast",
-        "AS-REP",
-        "bloodhound",
-        "DCSync",
-        "golden ticket",
-        "ADCS",
-        "ESC",
-        "domain controller",
-        "LDAP",
-        "GPO",
-        "AD",
-        "domain admin"
-      ],
-      "tags": [
-        "offensive",
-        "ad",
-        "windows",
-        "lateral-movement"
-      ],
-      "recommended_model": "opus",
-      "source_file": "core/agents/active-directory.md"
+      "display_name": "Active Directory Attacker",
+      "file": "active-directory.md",
+      "description": "Active Directory exploitation specialist — BloodHound attack path analysis, Kerberoasting, AS-REP roasting, DCSync, ACL abuse, certificate services (AD-CS ESC1-ESC8), domain persistence, and GPO exploitation.",
+      "triggers": ["active directory", "AD attack", "bloodhound", "kerberoast", "DCSync", "GPO", "AD CS", "ESC1", "domain admin", "lateral movement", "LDAP", "Kerberos"],
+      "tags": ["offensive", "windows", "AD", "red-team", "lateral-movement"],
+      "recommended_model": "sonnet"
     },
     {
       "name": "api-attacker",
-      "display_name": "Probe common API endpoints",
-      "description": "API security testing specialist for REST, GraphQL, gRPC, and WebSocket APIs. Handles BOLA/IDOR, mass assignment, authentication bypass, rate limit evasion, JWT attacks, GraphQL introspection abuse, API enumeration, and OWASP API Top 10. Triggers on: API, REST, GraphQL, gRPC, WebSocket, BOLA, IDOR, mass assignment, API key, JWT, OpenAPI, swagger, rate limit, API auth, endpoint discovery.",
-      "triggers": [
-        "API",
-        "REST",
-        "GraphQL",
-        "gRPC",
-        "WebSocket",
-        "BOLA",
-        "IDOR",
-        "mass assignment",
-        "API key",
-        "JWT",
-        "OpenAPI",
-        "swagger",
-        "rate limit",
-        "API auth",
-        "endpoint discovery"
-      ],
-      "tags": [
-        "offensive",
-        "api",
-        "graphql"
-      ],
-      "recommended_model": "sonnet",
-      "source_file": "core/agents/api-attacker.md"
+      "display_name": "API Attacker",
+      "file": "api-attacker.md",
+      "description": "API security testing — REST/GraphQL/SOAP testing, IDOR, BOLA/BFLA, broken authentication, rate limiting bypass, mass assignment, API key leakage, and API schema fuzzing.",
+      "triggers": ["API security", "REST API", "GraphQL", "IDOR", "BOLA", "API key", "mass assignment", "rate limit", "API testing"],
+      "tags": ["offensive", "web", "API", "appsec"],
+      "recommended_model": "sonnet"
     },
     {
       "name": "blue-team",
-      "display_name": "CIS Benchmark assessment with Lynis",
-      "description": "Defensive security and hardening specialist. Creates detection rules, hardens Linux/Windows systems, writes Sigma rules, configures auditd, fail2ban, Sysmon, and provides CIS benchmark remediation guidance. Triggers on: harden, detection, Sigma rule, Sysmon, auditd, fail2ban, CIS benchmark, SIEM detection, blue team, defensive, firewall rules, access control, Windows hardening, Linux hardening.",
-      "triggers": [
-        "harden",
-        "detection",
-        "Sigma rule",
-        "Sysmon",
-        "auditd",
-        "fail2ban",
-        "CIS benchmark",
-        "SIEM detection",
-        "blue team",
-        "defensive",
-        "firewall rules",
-        "access control",
-        "Windows hardening",
-        "Linux hardening"
-      ],
-      "tags": [
-        "defensive",
-        "hardening",
-        "detection"
-      ],
-      "recommended_model": "sonnet",
-      "source_file": "core/agents/blue-team.md"
+      "display_name": "Blue Team Defender",
+      "file": "blue-team.md",
+      "description": "Defensive security — detection rule creation (Sigma), CIS hardening, log configuration, incident response playbooks, EDR tuning, SIEM correlation, and security baseline enforcement.",
+      "triggers": ["blue team", "detection", "hardening", "SIEM", "Sigma rules", "CIS benchmark", "EDR", "SOC", "defensive"],
+      "tags": ["defensive", "detection", "hardening", "compliance"],
+      "recommended_model": "sonnet"
     },
     {
       "name": "c2-operator",
-      "display_name": "Recommended C2 infrastructure:",
-      "description": "Command and control infrastructure specialist for authorized red team operations. Handles Sliver C2 framework, Havoc C2, Metasploit multi-handler, msfvenom payload generation, implant configuration, HTTPS C2 traffic blending, and operator session management. Triggers on: C2, command and control, Sliver, Havoc, msfvenom, implant, beacon, Meterpreter, payload generation, listener, handler, staged payload.",
-      "triggers": [
-        "C2",
-        "command and control",
-        "Sliver",
-        "Havoc",
-        "msfvenom",
-        "implant",
-        "beacon",
-        "Meterpreter",
-        "payload generation",
-        "listener",
-        "handler",
-        "staged payload"
-      ],
-      "tags": [
-        "offensive",
-        "c2",
-        "red-team"
-      ],
-      "recommended_model": "opus",
-      "source_file": "core/agents/c2-operator.md"
+      "display_name": "C2 Operator",
+      "file": "c2-operator.md",
+      "description": "Command and Control infrastructure — Sliver framework, Havoc C2, Cobalt Strike profile analysis, redirector setup, payload generation, malleable C2 profiles, and implant management.",
+      "triggers": ["C2", "command and control", "sliver", "havoc", "cobalt strike", "beacon", "implant", "redirector", "malleable C2"],
+      "tags": ["offensive", "red-team", "infrastructure", "C2"],
+      "recommended_model": "sonnet"
     },
     {
       "name": "cloud-attacker",
-      "display_name": "Verify current caller identity",
-      "description": "Cloud penetration testing specialist for AWS, Azure, and GCP. Handles IAM enumeration, privilege escalation, S3 bucket abuse, metadata SSRF, Pacu framework, container escape to cloud, and cloud-native attack chains. Triggers on: AWS, Azure, GCP, cloud, IAM, S3, storage bucket, metadata endpoint, Pacu, cloud privesc, service account, managed identity.",
-      "triggers": [
-        "AWS",
-        "Azure",
-        "GCP",
-        "cloud",
-        "IAM",
-        "S3",
-        "storage bucket",
-        "metadata endpoint",
-        "Pacu",
-        "cloud privesc",
-        "service account",
-        "managed identity"
-      ],
-      "tags": [
-        "offensive",
-        "cloud",
-        "aws",
-        "azure",
-        "gcp"
-      ],
-      "recommended_model": "sonnet",
-      "source_file": "core/agents/cloud-attacker.md"
+      "display_name": "Cloud Attacker",
+      "file": "cloud-attacker.md",
+      "description": "Cloud penetration testing — AWS, Azure, GCP enumeration, Pacu automation, S3 bucket exploitation, IAM privilege escalation, Lambda backdoor injection, and cloud metadata service abuse.",
+      "triggers": ["cloud security", "AWS", "Azure", "GCP", "Pacu", "S3 bucket", "IAM", "Lambda", "cloud pentest", "metadata service"],
+      "tags": ["offensive", "cloud", "AWS", "Azure", "GCP"],
+      "recommended_model": "sonnet"
+    },
+    {
+      "name": "cloud-postex",
+      "display_name": "Cloud Post-Exploitation",
+      "file": "cloud-postex.md",
+      "description": "Cloud post-exploitation — IAM persistence, data exfiltration from cloud storage, cross-account trust abuse, cloud instance metadata SSRF, and cloud audit log manipulation.",
+      "triggers": ["cloud post-exploitation", "cloud persistence", "IAM abuse", "cloud data exfil", "cloud audit", "cross-account"],
+      "tags": ["offensive", "cloud", "post-exploitation", "persistence"],
+      "recommended_model": "sonnet"
     },
     {
       "name": "compliance-scanner",
-      "display_name": "Lynis \u2014 Linux CIS benchmark check",
-      "description": "Compliance and security standards assessment specialist. Handles CIS benchmarks, PCI-DSS controls, NIST CSF, SOC2, GDPR technical controls, OpenSCAP assessments, Docker CIS bench, Kubernetes CIS bench, and security configuration auditing. Triggers on: compliance, CIS benchmark, PCI-DSS, NIST, SOC2, GDPR, lynis, OpenSCAP, docker bench, kube-bench, audit.",
-      "triggers": [
-        "compliance",
-        "CIS benchmark",
-        "PCI-DSS",
-        "NIST",
-        "SOC2",
-        "GDPR",
-        "lynis",
-        "OpenSCAP",
-        "docker bench",
-        "kube-bench",
-        "audit"
-      ],
-      "tags": [
-        "compliance",
-        "defensive",
-        "audit"
-      ],
-      "recommended_model": "sonnet",
-      "source_file": "core/agents/compliance-scanner.md"
+      "display_name": "Compliance Scanner",
+      "file": "compliance-scanner.md",
+      "description": "Compliance assessment — CIS benchmarks, PCI-DSS, NIST CSF, SOC 2, ISO 27001 gap analysis, automated scanning with Prowler, ScoutSuite, and benchmark frameworks.",
+      "triggers": ["compliance", "CIS benchmark", "PCI-DSS", "NIST CSF", "SOC 2", "ISO 27001", "Prowler", "ScoutSuite", "gap analysis"],
+      "tags": ["defensive", "compliance", "governance", "auditing"],
+      "recommended_model": "haiku"
     },
     {
       "name": "container-attacker",
-      "display_name": "Am I in a container?",
-      "description": "Container and Kubernetes security specialist. Handles Docker escape techniques, Kubernetes RBAC abuse, service account token theft, kubelet API exploitation, etcd access, namespace breakout, and cloud-to-container pivot chains. Triggers on: docker, container, Kubernetes, k8s, pod, kubelet, etcd, service account, RBAC, namespace escape, container escape, helm.",
-      "triggers": [
-        "docker",
-        "container",
-        "Kubernetes",
-        "k8s",
-        "pod",
-        "kubelet",
-        "etcd",
-        "service account",
-        "RBAC",
-        "namespace escape",
-        "container escape",
-        "helm"
-      ],
-      "tags": [
-        "offensive",
-        "containers",
-        "docker",
-        "kubernetes"
-      ],
-      "recommended_model": "sonnet",
-      "source_file": "core/agents/container-attacker.md"
+      "display_name": "Container Attacker",
+      "file": "container-attacker.md",
+      "description": "Container and Kubernetes security — Docker escape techniques, K8s RBAC abuse, cluster enumeration, container image scanning with Trivy, pod privilege escalation, and supply chain attacks.",
+      "triggers": ["container", "Docker", "Kubernetes", "K8s", "container escape", "RBAC", "Trivy", "pod security", "cluster pentest"],
+      "tags": ["offensive", "containers", "Kubernetes", "Docker"],
+      "recommended_model": "sonnet"
     },
     {
       "name": "crypto-attacker",
-      "display_name": "testssl.sh \u2014 comprehensive TLS assessment",
-      "description": "Cryptography and TLS security specialist. Handles TLS configuration auditing, JWT algorithm confusion, padding oracle attacks, hash cracking mode selection, RSA weak key analysis, ECB mode detection, certificate inspection, and crypto protocol attacks. Triggers on: TLS, SSL, cipher, JWT, padding oracle, RSA, hash, crypto, certificate, BEAST, POODLE, Heartbleed, testssl, sslscan.",
-      "triggers": [
-        "TLS",
-        "SSL",
-        "cipher",
-        "JWT",
-        "padding oracle",
-        "RSA",
-        "hash",
-        "crypto",
-        "certificate",
-        "BEAST",
-        "POODLE",
-        "Heartbleed",
-        "testssl",
-        "sslscan"
-      ],
-      "tags": [
-        "offensive",
-        "crypto",
-        "tls"
-      ],
-      "recommended_model": "opus",
-      "source_file": "core/agents/crypto-attacker.md"
+      "display_name": "Crypto Attacker",
+      "file": "crypto-attacker.md",
+      "description": "Cryptographic security assessment — SSL/TLS analysis, JWT algorithm confusion, padding oracle attacks, weak key detection, certificate validation bypass, and custom crypto audit.",
+      "triggers": ["cryptographic", "SSL", "TLS", "JWT", "algorithm confusion", "padding oracle", "certificate", "encryption", "crypto audit"],
+      "tags": ["offensive", "web", "crypto", "appsec"],
+      "recommended_model": "sonnet"
     },
     {
       "name": "dfir",
-      "display_name": "CRITICAL: Run in this ORDER \u2014 volatile data is lost on reboot",
-      "description": "Digital forensics and incident response specialist. Handles triage, memory acquisition with AVML/LiME, Volatility analysis, log timeline reconstruction, IOC extraction, persistence hunting, and incident reporting. Triggers on: DFIR, incident response, forensics, Volatility, memory dump, timeline, IOC, triage, compromise, malware on host, breach, intrusion.",
-      "triggers": [
-        "DFIR",
-        "incident response",
-        "forensics",
-        "Volatility",
-        "memory dump",
-        "timeline",
-        "IOC",
-        "triage",
-        "compromise",
-        "malware on host",
-        "breach",
-        "intrusion"
-      ],
-      "tags": [
-        "defensive",
-        "forensics",
-        "incident-response"
-      ],
-      "recommended_model": "opus",
-      "source_file": "core/agents/dfir.md"
+      "display_name": "DFIR Analyst",
+      "file": "dfir.md",
+      "description": "Digital Forensics and Incident Response — memory forensics with Volatility3, disk forensics, evidence chain of custody, timeline analysis, artifact extraction, and incident containment.",
+      "triggers": ["DFIR", "forensics", "incident response", "memory forensics", "Volatility", "disk forensics", "evidence", "timeline analysis", "IR"],
+      "tags": ["defensive", "forensics", "incident-response"],
+      "recommended_model": "sonnet"
     },
     {
       "name": "evasion",
-      "display_name": "AMSI = Antimalware Scan Interface \u2014 patches memory to disable scanning",
-      "description": "Antivirus and EDR evasion specialist for authorized red team engagements. Handles AMSI bypass, payload obfuscation, living-off-the-land techniques, sandbox detection, process injection concepts, and detection gap identification. Triggers on: AMSI bypass, AV evasion, EDR bypass, obfuscation, LOTL, living off the land, payload encoding, sandbox detection, process injection, defender bypass.",
-      "triggers": [
-        "AMSI bypass",
-        "AV evasion",
-        "EDR bypass",
-        "obfuscation",
-        "LOTL",
-        "living off the land",
-        "payload encoding",
-        "sandbox detection",
-        "process injection",
-        "defender bypass"
-      ],
-      "tags": [
-        "offensive",
-        "evasion",
-        "red-team"
-      ],
-      "recommended_model": "opus",
-      "source_file": "core/agents/evasion.md"
+      "display_name": "Evasion Specialist",
+      "file": "evasion.md",
+      "description": "Evasion techniques — AMSI bypass, ETW patching, process injection, living-off-the-land binaries (LOLBins), antivirus evasion, and payload obfuscation for red team operations.",
+      "triggers": ["evasion", "AMSI bypass", "ETW patch", "process injection", "LOLBins", "antivirus evasion", "obfuscation", "living off the land"],
+      "tags": ["offensive", "red-team", "evasion", "post-exploitation"],
+      "recommended_model": "opus"
     },
     {
       "name": "exploit",
-      "display_name": "Search by service/version",
-      "description": "Exploitation specialist for gaining initial access. Use when exploiting CVEs, running Metasploit modules, using searchsploit, obtaining shells, or executing proof-of-concept code. Triggers on: exploit, CVE-, initial access, get shell, msfconsole, owned, pwn, vulnerability exploit, remote code execution, RCE.",
-      "triggers": [
-        "exploit",
-        "CVE-",
-        "initial access",
-        "get shell",
-        "msfconsole",
-        "owned",
-        "pwn",
-        "vulnerability exploit",
-        "remote code execution",
-        "RCE"
-      ],
-      "tags": [
-        "offensive",
-        "exploitation",
-        "initial-access"
-      ],
-      "recommended_model": "opus",
-      "source_file": "core/agents/exploit.md"
+      "display_name": "Exploitation Specialist",
+      "file": "exploit.md",
+      "description": "Vulnerability exploitation — Metasploit framework, manual exploit development, RCE/SQLi/XSS exploitation, buffer overflow, heap spraying, and custom exploit chain assembly.",
+      "triggers": ["exploit", "Metasploit", "RCE", "SQL injection", "buffer overflow", "heap spray", "exploit development", "zero-day"],
+      "tags": ["offensive", "exploitation", "web", "red-team"],
+      "recommended_model": "opus"
     },
     {
       "name": "iot-attacker",
-      "display_name": "Method 1: Download from vendor website",
-      "description": "IoT and embedded systems security specialist. Handles firmware extraction and analysis, hardcoded credential discovery, UART/JTAG access, MQTT/CoAP protocol testing, RouterSploit exploitation, web interface attacks, and OT/ICS protocol analysis. Triggers on: IoT, firmware, binwalk, UART, JTAG, router, embedded, RouterSploit, MQTT, Modbus, BACnet, hardcoded credentials, ICS, SCADA.",
-      "triggers": [
-        "IoT",
-        "firmware",
-        "binwalk",
-        "UART",
-        "JTAG",
-        "router",
-        "embedded",
-        "RouterSploit",
-        "MQTT",
-        "Modbus",
-        "BACnet",
-        "hardcoded credentials",
-        "ICS",
-        "SCADA"
-      ],
-      "tags": [
-        "offensive",
-        "iot",
-        "embedded"
-      ],
-      "recommended_model": "sonnet",
-      "source_file": "core/agents/iot-attacker.md"
+      "display_name": "IoT/OT Attacker",
+      "file": "iot-attacker.md",
+      "description": "IoT and OT security assessment — firmware analysis with Binwalk/Ghidra, emulation with QEMU/Firmadyne, UART/JTAG hardware hacking, MQTT/CoAP/Modbus protocol testing, SPI flash extraction, and embedded web interface exploitation.",
+      "triggers": ["IoT", "firmware", "embedded", "UART", "JTAG", "MQTT", "Modbus", "SCADA", "ICS", "OT security", "hardware hacking", "SPI flash", "QEMU", "Firmadyne"],
+      "tags": ["offensive", "IoT", "OT", "firmware", "hardware"],
+      "recommended_model": "sonnet"
     },
     {
       "name": "log-analyst",
-      "display_name": "Discover available log files",
-      "description": "Security log analysis specialist. Parses and correlates auth.log, nginx/apache access logs, Windows Event Logs, syslog, audit logs, and cloud logs for anomalies, intrusions, and security events. Generates timeline and Sigma rules from findings. Triggers on: log analysis, log parsing, auth.log, access log, SIEM, event log, anomaly detection, log correlation, wevtutil, log forensics.",
-      "triggers": [
-        "log analysis",
-        "log parsing",
-        "auth.log",
-        "access log",
-        "SIEM",
-        "event log",
-        "anomaly detection",
-        "log correlation",
-        "wevtutil",
-        "log forensics"
-      ],
-      "tags": [
-        "defensive",
-        "logging",
-        "siem"
-      ],
-      "recommended_model": "sonnet",
-      "source_file": "core/agents/log-analyst.md"
+      "display_name": "Log Analyst",
+      "file": "log-analyst.md",
+      "description": "Security log analysis — Splunk queries, Linux audit logs, web server intrusion analysis, Windows event log parsing, log correlation, anomaly detection, and incident evidence extraction.",
+      "triggers": ["log analysis", "Splunk", "audit log", "event log", "web log", "log correlation", "anomaly detection", "SIEM query"],
+      "tags": ["defensive", "detection", "forensics", "SOC"],
+      "recommended_model": "haiku"
     },
     {
       "name": "malware-analyst",
-      "display_name": "CRITICAL: Work with samples in isolated environment only",
-      "description": "Malware analysis specialist for static and dynamic analysis. Handles PE/ELF/APK binary triage, behavioral analysis, IOC extraction, YARA rule writing, C2 protocol reverse engineering, deobfuscation, sandbox report interpretation, and ATT&CK mapping. Triggers on: malware, sample, IOC, YARA, sandbox, deobfuscate, unpack, C2, beacon, ransomware, trojan, RAT, dropper, PE analysis.",
-      "triggers": [
-        "malware",
-        "sample",
-        "IOC",
-        "YARA",
-        "sandbox",
-        "deobfuscate",
-        "unpack",
-        "C2",
-        "beacon",
-        "ransomware",
-        "trojan",
-        "RAT",
-        "dropper",
-        "PE analysis"
-      ],
-      "tags": [
-        "malware",
-        "analysis",
-        "defensive"
-      ],
-      "recommended_model": "opus",
-      "source_file": "core/agents/malware-analyst.md"
+      "display_name": "Malware Analyst",
+      "file": "malware-analyst.md",
+      "description": "Malware analysis — Linux ELF and Windows PE analysis, YARA rule creation, sandbox execution, behavior analysis, macro malware triage, hash enrichment with VirusTotal, and malware classification.",
+      "triggers": ["malware", "ELF", "PE analysis", "YARA", "sandbox", "behavior analysis", "macro malware", "VirusTotal", "reverse engineering"],
+      "tags": ["defensive", "malware", "forensics", "reverse-engineering"],
+      "recommended_model": "sonnet"
     },
     {
       "name": "mobile-attacker",
-      "display_name": "Decompile APK with apktool (smali + resources)",
-      "description": "Mobile application security specialist for Android and iOS. Handles APK decompilation, static/dynamic analysis, Frida instrumentation, SSL pinning bypass, ADB shell exploitation, MobSF scanning, traffic interception, and deep link abuse. Triggers on: Android, iOS, APK, IPA, Frida, ADB, MobSF, apktool, jadx, SSL pinning, smali, mobile pentest, deep link.",
-      "triggers": [
-        "Android",
-        "iOS",
-        "APK",
-        "IPA",
-        "Frida",
-        "ADB",
-        "MobSF",
-        "apktool",
-        "jadx",
-        "SSL pinning",
-        "smali",
-        "mobile pentest",
-        "deep link"
-      ],
-      "tags": [
-        "offensive",
-        "mobile",
-        "android",
-        "ios"
-      ],
-      "recommended_model": "sonnet",
-      "source_file": "core/agents/mobile-attacker.md"
+      "display_name": "Mobile Attacker",
+      "file": "mobile-attacker.md",
+      "description": "Mobile application security — Android APK analysis (apktool/jadx), iOS IPA analysis, Frida instrumentation, SSL/root/biometric/jailbreak detection bypass, traffic interception (Burp/mitmproxy), OWASP Mobile Top 10, and MobSF automated scanning.",
+      "triggers": ["mobile security", "Android", "iOS", "APK", "IPA", "Frida", "SSL pinning", "root detection", "biometric bypass", "jailbreak", "MobSF", "mitmproxy"],
+      "tags": ["offensive", "mobile", "appsec", "Android", "iOS"],
+      "recommended_model": "sonnet"
     },
     {
       "name": "network-ops",
-      "display_name": "ARP sweep \u2014 discover live hosts",
-      "description": "Network penetration testing specialist for ARP attacks, MitM, packet capture, SNMP enumeration, SMB relay, Responder credential capture, and network-level attacks. Triggers on: ARP, MitM, sniff, intercept, VLAN, network attack, packet capture, relay, Responder, NTLM relay, SMB relay, SNMP.",
-      "triggers": [
-        "ARP",
-        "MitM",
-        "sniff",
-        "intercept",
-        "VLAN",
-        "network attack",
-        "packet capture",
-        "relay",
-        "Responder",
-        "NTLM relay",
-        "SMB relay",
-        "SNMP"
-      ],
-      "tags": [
-        "offensive",
-        "network",
-        "mitm"
-      ],
-      "recommended_model": "sonnet",
-      "source_file": "core/agents/network-ops.md"
+      "display_name": "Network Operator",
+      "file": "network-ops.md",
+      "description": "Network-level attacks — ARP spoofing, man-in-the-middle interception, SMB relay, LLMNR/NBT-NS poisoning, VLAN hopping, and network traffic analysis with tshark.",
+      "triggers": ["network attack", "ARP spoof", "MITM", "SMB relay", "LLMNR", "NBT-NS", "VLAN hopping", "network traffic", "packet capture"],
+      "tags": ["offensive", "network", "MITM", "red-team"],
+      "recommended_model": "sonnet"
     },
     {
       "name": "osint",
-      "display_name": "WHOIS registration data",
-      "description": "Open source intelligence specialist for passive reconnaissance. Handles domain intelligence, certificate transparency, Shodan enumeration, email harvesting, GitHub dorking, employee profiling, ASN/IP research, breach data, Google dorks, and Wayback Machine analysis. Triggers on: OSINT, passive recon, theHarvester, shodan, whois, crt.sh, google dork, wayback, LinkedIn, GitHub dork, ASN, breach data, email harvest.",
-      "triggers": [
-        "OSINT",
-        "passive recon",
-        "theHarvester",
-        "shodan",
-        "whois",
-        "crt.sh",
-        "google dork",
-        "wayback",
-        "LinkedIn",
-        "GitHub dork",
-        "ASN",
-        "breach data",
-        "email harvest"
-      ],
-      "tags": [
-        "recon",
-        "osint",
-        "passive"
-      ],
-      "recommended_model": "sonnet",
-      "source_file": "core/agents/osint.md"
+      "display_name": "OSINT Collector",
+      "file": "osint.md",
+      "description": "Open source intelligence gathering — passive reconnaissance, SpiderFoot automation, DNS enumeration, subdomain discovery, social media profiling, email harvesting, and external footprint mapping.",
+      "triggers": ["OSINT", "reconnaissance", "SpiderFoot", "DNS enumeration", "subdomain", "social media", "email harvesting", "footprinting", "passive"],
+      "tags": ["recon", "OSINT", "intelligence", "passive"],
+      "recommended_model": "haiku"
     },
     {
       "name": "password-attacks",
-      "display_name": "Confirm the target that produced the hash is listed in scope.txt",
-      "description": "Password cracking and credential attack specialist. Use when working with password hashes, hash cracking, wordlist attacks, credential analysis, or password auditing. Triggers on: password, hash, crack, hashcat, john, wordlist, NetNTLMv2, Kerberoast, NTLM, bcrypt, credential, ASREP, JWT crack, mask attack, rule attack, CeWL, rockyou, hash mode.",
-      "triggers": [
-        "password",
-        "hash",
-        "crack",
-        "hashcat",
-        "john",
-        "wordlist",
-        "NetNTLMv2",
-        "Kerberoast",
-        "NTLM",
-        "bcrypt",
-        "credential",
-        "ASREP",
-        "JWT crack",
-        "mask attack",
-        "rule attack",
-        "CeWL",
-        "rockyou",
-        "hash mode"
-      ],
-      "tags": [
-        "offensive",
-        "credential-access",
-        "cracking"
-      ],
-      "recommended_model": "sonnet",
-      "source_file": "core/agents/password-attacks.md"
+      "display_name": "Password Attacker",
+      "file": "password-attacks.md",
+      "description": "Password and credential attacks — hash cracking with hashcat, credential stuffing, password spraying, NTLM relay, Kerberoasting, and password policy assessment.",
+      "triggers": ["password", "hashcat", "credential stuffing", "password spray", "hash cracking", "NTLM relay", "Kerberoast", "credential harvesting"],
+      "tags": ["offensive", "credentials", "cracking"],
+      "recommended_model": "haiku"
     },
     {
       "name": "post-ex",
-      "display_name": "LinPEAS \u2014 comprehensive Linux privesc checker",
-      "description": "Post-exploitation specialist for privilege escalation, lateral movement, persistence, and credential harvesting. Use after obtaining initial shell access. Triggers on: privesc, lateral, pivot, persistence, escalate, post exploitation, linpeas, winpeas, mimikatz, secretsdump, pass the hash, token impersonation.",
-      "triggers": [
-        "privesc",
-        "lateral",
-        "pivot",
-        "persistence",
-        "escalate",
-        "post exploitation",
-        "linpeas",
-        "winpeas",
-        "mimikatz",
-        "secretsdump",
-        "pass the hash",
-        "token impersonation"
-      ],
-      "tags": [
-        "offensive",
-        "post-exploitation",
-        "privesc",
-        "lateral-movement"
-      ],
-      "recommended_model": "opus",
-      "source_file": "core/agents/post-ex.md"
+      "display_name": "Post-Exploitation Operator",
+      "file": "post-ex.md",
+      "description": "Post-exploitation — Linux/Windows privilege escalation, credential harvesting with LaZagne, lateral movement (WMI/PSExec/WinRM), golden ticket creation, and persistence mechanisms.",
+      "triggers": ["post-exploitation", "privilege escalation", "lateral movement", "credential harvesting", "LaZagne", "golden ticket", "persistence", "WMI", "PSExec"],
+      "tags": ["offensive", "post-exploitation", "lateral-movement"],
+      "recommended_model": "sonnet"
+    },
+    {
+      "name": "purple-team",
+      "display_name": "Purple Team Coordinator",
+      "file": "purple-team.md",
+      "description": "Purple team operations — MITRE ATT&CK mapping, detection gap identification, offensive technique execution with defensive validation, atomic red team tests, and collaborative attacker/defender exercises.",
+      "triggers": ["purple team", "MITRE ATT&CK", "detection gap", "atomic red team", "attack validation", "purple exercise"],
+      "tags": ["collaborative", "offensive", "defensive", "MITRE"],
+      "recommended_model": "sonnet"
     },
     {
       "name": "recon",
-      "display_name": "Full TCP scan (stealth SYN)",
-      "description": "Reconnaissance and enumeration specialist. Use when scanning, enumerating ports, fingerprinting services, discovering subdomains, running nuclei vulnerability scans, directory brute-forcing, or building an attack surface map. Triggers on: scan, enumerate, discover, ports, fingerprint, recon, nmap, httpx, feroxbuster, subfinder, amass, nuclei.",
-      "triggers": [
-        "scan",
-        "enumerate",
-        "discover",
-        "ports",
-        "fingerprint",
-        "recon",
-        "nmap",
-        "httpx",
-        "feroxbuster",
-        "subfinder",
-        "amass",
-        "nuclei"
-      ],
-      "tags": [
-        "recon",
-        "offensive",
-        "enumeration"
-      ],
-      "recommended_model": "sonnet",
-      "source_file": "core/agents/recon.md"
+      "display_name": "Recon Specialist",
+      "file": "recon.md",
+      "description": "External and internal reconnaissance — advanced Nmap scanning, subdomain enumeration with Subfinder/Amass, port/service discovery, banner grabbing, web technology fingerprinting, and scope validation.",
+      "triggers": ["reconnaissance", "nmap", "subdomain", "port scan", "service enumeration", "fingerprinting", "OSINT", "external recon"],
+      "tags": ["recon", "offensive", "network", "enumeration"],
+      "recommended_model": "haiku"
+    },
+    {
+      "name": "red-infra",
+      "display_name": "Red Team Infrastructure",
+      "file": "red-infra.md",
+      "description": "Red team infrastructure — C2 deployment, redirector chains, domain registration with privacy, phishing infrastructure, payload hosting, and engagement lifecycle management.",
+      "triggers": ["red team infrastructure", "redirector", "phishing infrastructure", "payload hosting", "red team", "engagement", "domain"],
+      "tags": ["offensive", "red-team", "infrastructure"],
+      "recommended_model": "sonnet"
     },
     {
       "name": "report-writer",
-      "display_name": "Gather all findings files from evidence directory",
-      "description": "Penetration test report writing specialist. Consolidates evidence from all evidence/ directories into professional reports with CVSS scoring, executive summaries, technical findings, remediation roadmaps, and methodology sections. Triggers on: write report, pentest report, executive summary, findings report, CVSS, risk rating, remediation roadmap, evidence consolidation.",
-      "triggers": [
-        "write report",
-        "pentest report",
-        "executive summary",
-        "findings report",
-        "CVSS",
-        "risk rating",
-        "remediation roadmap",
-        "evidence consolidation"
-      ],
-      "tags": [
-        "reporting",
-        "documentation"
-      ],
-      "recommended_model": "opus",
-      "source_file": "core/agents/report-writer.md"
+      "display_name": "Report Writer",
+      "file": "report-writer.md",
+      "description": "Security report generation — executive summaries, technical findings, threat intelligence reports, incident response playbooks, CVSS scoring, remediation guidance, and SOC dashboards.",
+      "triggers": ["report", "executive summary", "findings", "threat intelligence", "remediation", "CVSS", "playbook", "dashboard"],
+      "tags": ["reporting", "documentation", "compliance"],
+      "recommended_model": "haiku"
     },
     {
       "name": "reverse-engineer",
-      "display_name": "Identify binary type",
-      "description": "Binary reverse engineering and exploit development specialist. Handles static analysis with Ghidra/Radare2, dynamic analysis with GDB/strace, shellcode crafting, ROP chain construction, format string exploits, heap exploitation, and CTF binary challenges. Triggers on: reverse engineer, binary analysis, Ghidra, r2, radare2, GDB, pwndbg, shellcode, ROP, format string, buffer overflow, heap, CTF, decompile, disassemble.",
-      "triggers": [
-        "reverse engineer",
-        "binary analysis",
-        "Ghidra",
-        "r2",
-        "radare2",
-        "GDB",
-        "pwndbg",
-        "shellcode",
-        "ROP",
-        "format string",
-        "buffer overflow",
-        "heap",
-        "CTF",
-        "decompile",
-        "disassemble"
-      ],
-      "tags": [
-        "offensive",
-        "malware",
-        "reverse-engineering"
-      ],
-      "recommended_model": "opus",
-      "source_file": "core/agents/reverse-engineer.md"
+      "display_name": "Reverse Engineer",
+      "file": "reverse-engineer.md",
+      "description": "Binary reverse engineering — Ghidra analysis, .NET decompilation with dnSpy, binary exploitation analysis, heap spray techniques, shellcode development, and vulnerability discovery in compiled code.",
+      "triggers": ["reverse engineering", "Ghidra", "dnSpy", "binary analysis", "shellcode", "decompilation", "disassembly", ".NET"],
+      "tags": ["offensive", "reverse-engineering", "binary"],
+      "recommended_model": "opus"
+    },
+    {
+      "name": "segmentation-tester",
+      "display_name": "Segmentation Tester",
+      "file": "segmentation-tester.md",
+      "description": "Network segmentation testing — cross-segment access validation, firewall rule testing, VLAN hopping verification, lateral movement path identification, and segmentation gap detection.",
+      "triggers": ["segmentation", "network segmentation", "firewall rules", "cross-segment", "VLAN", "lateral movement", "network isolation"],
+      "tags": ["offensive", "network", "infrastructure"],
+      "recommended_model": "sonnet"
     },
     {
       "name": "social-engineer",
-      "display_name": "Start GoPhish server",
-      "description": "Social engineering and phishing simulation specialist. Handles GoPhish campaign setup, spear-phishing email crafting, evilginx2 adversary-in-the-middle phishing, pretexting scripts, vishing scenarios, SMS phishing, and awareness training. Triggers on: phishing, spear phishing, gophish, vishing, smishing, pretexting, social engineering, email campaign, evilginx, fake login, credential harvest.",
-      "triggers": [
-        "phishing",
-        "spear phishing",
-        "gophish",
-        "vishing",
-        "smishing",
-        "pretexting",
-        "social engineering",
-        "email campaign",
-        "evilginx",
-        "fake login",
-        "credential harvest"
-      ],
-      "tags": [
-        "offensive",
-        "social-engineering",
-        "phishing"
-      ],
-      "recommended_model": "sonnet",
-      "source_file": "core/agents/social-engineer.md"
+      "display_name": "Social Engineer",
+      "file": "social-engineer.md",
+      "description": "Social engineering — phishing campaign simulation with GoPhish, spear phishing, pretexting, vishing, payload delivery, credential harvesting, and social engineering metrics/reporting.",
+      "triggers": ["social engineering", "phishing", "GoPhish", "spear phishing", "pretexting", "vishing", "credential harvesting"],
+      "tags": ["offensive", "social-engineering", "red-team"],
+      "recommended_model": "sonnet"
     },
     {
       "name": "threat-hunter",
-      "display_name": "T1059 \u2014 Command and Script Interpreter (PowerShell on Linux via pwsh)",
-      "description": "Proactive threat hunting specialist using ATT&CK-based hypotheses. Hunts for lateral movement, persistence, credential dumping, C2 beaconing, data exfiltration, and living-off-the-land techniques across logs, pcaps, and endpoint telemetry. Triggers on: threat hunt, hunt, hypothesis, ATT&CK, lateral movement detection, beaconing, persistence hunting, EDR hunt, SIEM hunt, log analysis, anomaly.",
-      "triggers": [
-        "threat hunt",
-        "hunt",
-        "hypothesis",
-        "ATT&CK",
-        "lateral movement detection",
-        "beaconing",
-        "persistence hunting",
-        "EDR hunt",
-        "SIEM hunt",
-        "log analysis",
-        "anomaly"
-      ],
-      "tags": [
-        "defensive",
-        "threat-hunting",
-        "detection"
-      ],
-      "recommended_model": "sonnet",
-      "source_file": "core/agents/threat-hunter.md"
+      "display_name": "Threat Hunter",
+      "file": "threat-hunter.md",
+      "description": "Threat hunting — hypothesis-driven hunts, Cobalt Strike beacon detection, C2 beaconing analysis, persistence mechanism hunting, MITRE ATT&CK-based hunt queries, and threat intelligence integration.",
+      "triggers": ["threat hunting", "hypothesis", "beacon detection", "C2 hunting", "persistence", "threat intel", "MITRE hunt"],
+      "tags": ["defensive", "detection", "threat-intelligence"],
+      "recommended_model": "sonnet"
+    },
+    {
+      "name": "vuln-management",
+      "display_name": "Vulnerability Manager",
+      "file": "vuln-management.md",
+      "description": "Vulnerability management — Nuclei template scanning, authenticated scanning, Nessus/Tenable integration, vulnerability prioritization, CVSS scoring, and remediation tracking.",
+      "triggers": ["vulnerability management", "Nuclei", "Nessus", "vuln scanning", "CVSS", "remediation", "vulnerability prioritization"],
+      "tags": ["defensive", "compliance", "vulnerability-management"],
+      "recommended_model": "haiku"
     },
     {
       "name": "vuln-researcher",
-      "display_name": "NVD API v2 \u2014 authoritative CVE data",
-      "description": "Vulnerability research and CVE analysis specialist. Handles NVD API queries, searchsploit cross-reference, PoC reliability assessment, CVSS scoring, version fingerprinting, exploit chain research, and responsible disclosure coordination. Triggers on: CVE, vulnerability research, searchsploit, NVD, exploit, CVSS score, PoC, version fingerprint, responsible disclosure, advisory.",
-      "triggers": [
-        "CVE",
-        "vulnerability research",
-        "searchsploit",
-        "NVD",
-        "exploit",
-        "CVSS score",
-        "PoC",
-        "version fingerprint",
-        "responsible disclosure",
-        "advisory"
-      ],
-      "tags": [
-        "research",
-        "vulnerability",
-        "cve"
-      ],
-      "recommended_model": "opus",
-      "source_file": "core/agents/vuln-researcher.md"
+      "display_name": "Vulnerability Researcher",
+      "file": "vuln-researcher.md",
+      "description": "Vulnerability research — CVE analysis, KEV catalog prioritization, PoC development, patch diffing, zero-day research methodology, and responsible disclosure.",
+      "triggers": ["vulnerability research", "CVE", "zero-day", "PoC", "patch diffing", "KEV", "disclosure", "vuln analysis"],
+      "tags": ["offensive", "research", "exploitation"],
+      "recommended_model": "opus"
     },
     {
       "name": "web-attacker",
-      "display_name": "Technology stack detection",
-      "description": "Web application penetration testing \u2014 SQL injection, XSS, SSRF, LFI, IDOR, JWT attacks, GraphQL, API parameter discovery, and OWASP Top 10 exploitation",
-      "triggers": [],
-      "tags": [
-        "offensive",
-        "web",
-        "owasp"
-      ],
-      "recommended_model": "sonnet",
-      "source_file": "core/agents/web-attacker.md"
+      "display_name": "Web Attacker",
+      "file": "web-attacker.md",
+      "description": "Web application penetration testing — SQLMap exploitation, XSS testing, SSRF, deserialization attacks, authentication bypass, file inclusion, and OWASP Top 10 systematic assessment.",
+      "triggers": ["web application", "pentest", "SQL injection", "XSS", "SSRF", "OWASP", "web security", "burp suite", "SQLMap", "deserialization"],
+      "tags": ["offensive", "web", "appsec", "OWASP"],
+      "recommended_model": "sonnet"
     },
     {
       "name": "wireless-attacker",
-      "display_name": "List wireless interfaces",
-      "description": "Wireless network penetration testing specialist. Handles WPA2/WPA3 capture and cracking, PMKID attacks, Evil Twin / rogue AP attacks, WPS PIN attacks, EAP/PEAP credential capture, Bluetooth assessment, and wireless deauthentication. Triggers on: wifi, wireless, WPA2, WPA3, aircrack, airmon, WPS, evil twin, rogue AP, 802.11, PMKID, EAP, PEAP, Bluetooth, BLE, hostapd-wpe.",
-      "triggers": [
-        "wifi",
-        "wireless",
-        "WPA2",
-        "WPA3",
-        "aircrack",
-        "airmon",
-        "WPS",
-        "evil twin",
-        "rogue AP",
-        "802.11",
-        "PMKID",
-        "EAP",
-        "PEAP",
-        "Bluetooth",
-        "BLE",
-        "hostapd-wpe"
-      ],
-      "tags": [
-        "offensive",
-        "wireless",
-        "wifi"
-      ],
-      "recommended_model": "sonnet",
-      "source_file": "core/agents/wireless-attacker.md"
+      "display_name": "Wireless Attacker",
+      "file": "wireless-attacker.md",
+      "description": "Wireless network security — WPA/WPA3 handshake capture and cracking, PMKID attacks, WPS Pixie Dust, evil twin with hostapd/dnsmasq, Bluetooth LE testing with bettercap, and rogue AP detection.",
+      "triggers": ["wireless", "WiFi", "WPA", "WPA3", "PMKID", "WPS", "Pixie Dust", "evil twin", "Bluetooth", "BLE", "aircrack", "rogue AP"],
+      "tags": ["offensive", "wireless", "WiFi", "Bluetooth"],
+      "recommended_model": "sonnet"
     }
   ],
-  "total": 27
+  "model_mapping": {
+    "haiku": "Fast/cheap — ideal for recon, enumeration, log analysis, compliance scanning, and report generation",
+    "sonnet": "Balanced — default for most offensive/defensive analysis and tool orchestration",
+    "opus": "Maximum reasoning — reserved for exploit development, evasion, reverse engineering, and complex exploitation"
+  },
+  "stats": {
+    "total_agents": 32,
+    "offensive": 21,
+    "defensive": 7,
+    "collaborative": 1,
+    "recon": 2,
+    "reporting": 1
+  }
 }

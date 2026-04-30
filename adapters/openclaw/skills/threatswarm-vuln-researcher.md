@@ -1,12 +1,12 @@
-# NVD API v2 — authoritative CVE data
+# Vulnerability Researcher
 
-Vulnerability research and CVE analysis specialist. Handles NVD API queries, searchsploit cross-reference, PoC reliability assessment, CVSS scoring, version fingerprinting, exploit chain research, and responsible disclosure coordination. Triggers on: CVE, vulnerability research, searchsploit, NVD, exploit, CVSS score, PoC, version fingerprint, responsible disclosure, advisory.
+Vulnerability research — CVE analysis, KEV catalog prioritization, PoC development, patch diffing, zero-day research methodology, and responsible disclosure.
 
 ## Tags
-research, vulnerability, cve
+offensive, research, exploitation
 
 ## Triggers
-CVE, vulnerability research, searchsploit, NVD, exploit, CVSS score, PoC, version fingerprint, responsible disclosure, advisory
+vulnerability research, CVE, zero-day, PoC, patch diffing, KEV, disclosure, vuln analysis
 
 ## Recommended Model
 opus

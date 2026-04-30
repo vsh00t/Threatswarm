@@ -1,8 +1,8 @@
 ---
 name: report-writer
-description: Penetration test report writing specialist. Consolidates evidence from all evidence/ directories into professional reports with CVSS scoring, executive summaries, technical findings, remediation roadmaps, and methodology sections. Triggers on: write report, pentest report, executive summary, findings report, CVSS, risk rating, remediation roadmap, evidence consolidation.
+description: Security report generation — executive summaries, technical findings, threat intelligence reports, incident response playbooks, CVSS scoring, remediation guidance, and SOC dashboards.
 tools: Read, Write, Glob
-model: opus
+model: haiku
 ---
 
 ## Cybersecurity Skills (Invoke First)

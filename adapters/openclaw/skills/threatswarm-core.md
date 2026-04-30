@@ -1,38 +1,43 @@
 # ThreatSwarm Pentesting Framework
 
-Comprehensive multi-agent penetration testing framework with 27 specialist agents.
+Comprehensive multi-agent penetration testing framework with 32 specialist agents.
 
 ## Description
 Platform-agnostic pentesting framework for AI coding agents. Use when working on penetration testing, vulnerability assessment, red team operations, or security auditing tasks.
 
 ## Agents
-- **active-directory** (offensive, ad): Active Directory and Windows domain attack specialist. Use for Kerberoasting, AS-REP roasting, DCSyn
-- **api-attacker** (offensive, api): API security testing specialist for REST, GraphQL, gRPC, and WebSocket APIs. Handles BOLA/IDOR, mass
-- **blue-team** (defensive, hardening): Defensive security and hardening specialist. Creates detection rules, hardens Linux/Windows systems,
-- **c2-operator** (offensive, c2): Command and control infrastructure specialist for authorized red team operations. Handles Sliver C2 
-- **cloud-attacker** (offensive, cloud): Cloud penetration testing specialist for AWS, Azure, and GCP. Handles IAM enumeration, privilege esc
-- **compliance-scanner** (compliance, defensive): Compliance and security standards assessment specialist. Handles CIS benchmarks, PCI-DSS controls, N
-- **container-attacker** (offensive, containers): Container and Kubernetes security specialist. Handles Docker escape techniques, Kubernetes RBAC abus
-- **crypto-attacker** (offensive, crypto): Cryptography and TLS security specialist. Handles TLS configuration auditing, JWT algorithm confusio
-- **dfir** (defensive, forensics): Digital forensics and incident response specialist. Handles triage, memory acquisition with AVML/LiM
-- **evasion** (offensive, evasion): Antivirus and EDR evasion specialist for authorized red team engagements. Handles AMSI bypass, paylo
-- **exploit** (offensive, exploitation): Exploitation specialist for gaining initial access. Use when exploiting CVEs, running Metasploit mod
-- **iot-attacker** (offensive, iot): IoT and embedded systems security specialist. Handles firmware extraction and analysis, hardcoded cr
-- **log-analyst** (defensive, logging): Security log analysis specialist. Parses and correlates auth.log, nginx/apache access logs, Windows 
-- **malware-analyst** (malware, analysis): Malware analysis specialist for static and dynamic analysis. Handles PE/ELF/APK binary triage, behav
-- **mobile-attacker** (offensive, mobile): Mobile application security specialist for Android and iOS. Handles APK decompilation, static/dynami
-- **network-ops** (offensive, network): Network penetration testing specialist for ARP attacks, MitM, packet capture, SNMP enumeration, SMB 
-- **osint** (recon, osint): Open source intelligence specialist for passive reconnaissance. Handles domain intelligence, certifi
-- **password-attacks** (offensive, credential-access): Password cracking and credential attack specialist. Use when working with password hashes, hash crac
-- **post-ex** (offensive, post-exploitation): Post-exploitation specialist for privilege escalation, lateral movement, persistence, and credential
-- **recon** (recon, offensive): Reconnaissance and enumeration specialist. Use when scanning, enumerating ports, fingerprinting serv
-- **report-writer** (reporting, documentation): Penetration test report writing specialist. Consolidates evidence from all evidence/ directories int
-- **reverse-engineer** (offensive, malware): Binary reverse engineering and exploit development specialist. Handles static analysis with Ghidra/R
-- **social-engineer** (offensive, social-engineering): Social engineering and phishing simulation specialist. Handles GoPhish campaign setup, spear-phishin
-- **threat-hunter** (defensive, threat-hunting): Proactive threat hunting specialist using ATT&CK-based hypotheses. Hunts for lateral movement, persi
-- **vuln-researcher** (research, vulnerability): Vulnerability research and CVE analysis specialist. Handles NVD API queries, searchsploit cross-refe
-- **web-attacker** (offensive, web): Web application penetration testing — SQL injection, XSS, SSRF, LFI, IDOR, JWT attacks, GraphQL, API
-- **wireless-attacker** (offensive, wireless): Wireless network penetration testing specialist. Handles WPA2/WPA3 capture and cracking, PMKID attac
+- **active-directory** (offensive, windows): Active Directory exploitation specialist — BloodHound attack path analysis, Kerberoasting, AS-REP ro
+- **api-attacker** (offensive, web): API security testing — REST/GraphQL/SOAP testing, IDOR, BOLA/BFLA, broken authentication, rate limit
+- **blue-team** (defensive, detection): Defensive security — detection rule creation (Sigma), CIS hardening, log configuration, incident res
+- **c2-operator** (offensive, red-team): Command and Control infrastructure — Sliver framework, Havoc C2, Cobalt Strike profile analysis, red
+- **cloud-attacker** (offensive, cloud): Cloud penetration testing — AWS, Azure, GCP enumeration, Pacu automation, S3 bucket exploitation, IA
+- **cloud-postex** (offensive, cloud): Cloud post-exploitation — IAM persistence, data exfiltration from cloud storage, cross-account trust
+- **compliance-scanner** (defensive, compliance): Compliance assessment — CIS benchmarks, PCI-DSS, NIST CSF, SOC 2, ISO 27001 gap analysis, automated 
+- **container-attacker** (offensive, containers): Container and Kubernetes security — Docker escape techniques, K8s RBAC abuse, cluster enumeration, c
+- **crypto-attacker** (offensive, web): Cryptographic security assessment — SSL/TLS analysis, JWT algorithm confusion, padding oracle attack
+- **dfir** (defensive, forensics): Digital Forensics and Incident Response — memory forensics with Volatility3, disk forensics, evidenc
+- **evasion** (offensive, red-team): Evasion techniques — AMSI bypass, ETW patching, process injection, living-off-the-land binaries (LOL
+- **exploit** (offensive, exploitation): Vulnerability exploitation — Metasploit framework, manual exploit development, RCE/SQLi/XSS exploita
+- **iot-attacker** (offensive, IoT): IoT and OT security assessment — firmware analysis with Binwalk/Ghidra, emulation with QEMU/Firmadyn
+- **log-analyst** (defensive, detection): Security log analysis — Splunk queries, Linux audit logs, web server intrusion analysis, Windows eve
+- **malware-analyst** (defensive, malware): Malware analysis — Linux ELF and Windows PE analysis, YARA rule creation, sandbox execution, behavio
+- **mobile-attacker** (offensive, mobile): Mobile application security — Android APK analysis (apktool/jadx), iOS IPA analysis, Frida instrumen
+- **network-ops** (offensive, network): Network-level attacks — ARP spoofing, man-in-the-middle interception, SMB relay, LLMNR/NBT-NS poison
+- **osint** (recon, OSINT): Open source intelligence gathering — passive reconnaissance, SpiderFoot automation, DNS enumeration,
+- **password-attacks** (offensive, credentials): Password and credential attacks — hash cracking with hashcat, credential stuffing, password spraying
+- **post-ex** (offensive, post-exploitation): Post-exploitation — Linux/Windows privilege escalation, credential harvesting with LaZagne, lateral 
+- **purple-team** (collaborative, offensive): Purple team operations — MITRE ATT&CK mapping, detection gap identification, offensive technique exe
+- **recon** (recon, offensive): External and internal reconnaissance — advanced Nmap scanning, subdomain enumeration with Subfinder/
+- **red-infra** (offensive, red-team): Red team infrastructure — C2 deployment, redirector chains, domain registration with privacy, phishi
+- **report-writer** (reporting, documentation): Security report generation — executive summaries, technical findings, threat intelligence reports, i
+- **reverse-engineer** (offensive, reverse-engineering): Binary reverse engineering — Ghidra analysis, .NET decompilation with dnSpy, binary exploitation ana
+- **segmentation-tester** (offensive, network): Network segmentation testing — cross-segment access validation, firewall rule testing, VLAN hopping 
+- **social-engineer** (offensive, social-engineering): Social engineering — phishing campaign simulation with GoPhish, spear phishing, pretexting, vishing,
+- **threat-hunter** (defensive, detection): Threat hunting — hypothesis-driven hunts, Cobalt Strike beacon detection, C2 beaconing analysis, per
+- **vuln-management** (defensive, compliance): Vulnerability management — Nuclei template scanning, authenticated scanning, Nessus/Tenable integrat
+- **vuln-researcher** (offensive, research): Vulnerability research — CVE analysis, KEV catalog prioritization, PoC development, patch diffing, z
+- **web-attacker** (offensive, web): Web application penetration testing — SQLMap exploitation, XSS testing, SSRF, deserialization attack
+- **wireless-attacker** (offensive, wireless): Wireless network security — WPA/WPA3 handshake capture and cracking, PMKID attacks, WPS Pixie Dust, 
 
 ## Scope Enforcement
 **CRITICAL**: Before ANY network command, verify target is in scope.txt.

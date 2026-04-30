@@ -1,6 +1,6 @@
 ---
 name: network-ops
-description: Network penetration testing specialist for ARP attacks, MitM, packet capture, SNMP enumeration, SMB relay, Responder credential capture, and network-level attacks. Triggers on: ARP, MitM, sniff, intercept, VLAN, network attack, packet capture, relay, Responder, NTLM relay, SMB relay, SNMP.
+description: Network-level attacks — ARP spoofing, man-in-the-middle interception, SMB relay, LLMNR/NBT-NS poisoning, VLAN hopping, and network traffic analysis with tshark.
 tools: Bash, Read, Write
 model: sonnet
 ---

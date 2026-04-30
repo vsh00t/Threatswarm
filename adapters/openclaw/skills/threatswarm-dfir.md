@@ -1,15 +1,15 @@
-# CRITICAL: Run in this ORDER — volatile data is lost on reboot
+# DFIR Analyst
 
-Digital forensics and incident response specialist. Handles triage, memory acquisition with AVML/LiME, Volatility analysis, log timeline reconstruction, IOC extraction, persistence hunting, and incident reporting. Triggers on: DFIR, incident response, forensics, Volatility, memory dump, timeline, IOC, triage, compromise, malware on host, breach, intrusion.
+Digital Forensics and Incident Response — memory forensics with Volatility3, disk forensics, evidence chain of custody, timeline analysis, artifact extraction, and incident containment.
 
 ## Tags
 defensive, forensics, incident-response
 
 ## Triggers
-DFIR, incident response, forensics, Volatility, memory dump, timeline, IOC, triage, compromise, malware on host, breach, intrusion
+DFIR, forensics, incident response, memory forensics, Volatility, disk forensics, evidence, timeline analysis, IR
 
 ## Recommended Model
-opus
+sonnet
 
 ---
 ## Cybersecurity Skills (Invoke First)

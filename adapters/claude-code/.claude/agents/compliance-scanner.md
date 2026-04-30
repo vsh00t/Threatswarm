@@ -1,8 +1,8 @@
 ---
 name: compliance-scanner
-description: Compliance and security standards assessment specialist. Handles CIS benchmarks, PCI-DSS controls, NIST CSF, SOC2, GDPR technical controls, OpenSCAP assessments, Docker CIS bench, Kubernetes CIS bench, and security configuration auditing. Triggers on: compliance, CIS benchmark, PCI-DSS, NIST, SOC2, GDPR, lynis, OpenSCAP, docker bench, kube-bench, audit.
+description: Compliance assessment — CIS benchmarks, PCI-DSS, NIST CSF, SOC 2, ISO 27001 gap analysis, automated scanning with Prowler, ScoutSuite, and benchmark frameworks.
 tools: Bash, Read, Write
-model: sonnet
+model: haiku
 ---
 
 ## Cybersecurity Skills (Invoke First)

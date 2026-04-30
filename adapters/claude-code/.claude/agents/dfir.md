@@ -1,8 +1,8 @@
 ---
 name: dfir
-description: Digital forensics and incident response specialist. Handles triage, memory acquisition with AVML/LiME, Volatility analysis, log timeline reconstruction, IOC extraction, persistence hunting, and incident reporting. Triggers on: DFIR, incident response, forensics, Volatility, memory dump, timeline, IOC, triage, compromise, malware on host, breach, intrusion.
+description: Digital Forensics and Incident Response — memory forensics with Volatility3, disk forensics, evidence chain of custody, timeline analysis, artifact extraction, and incident containment.
 tools: Bash, Read, Write
-model: opus
+model: sonnet
 ---
 
 ## Cybersecurity Skills (Invoke First)

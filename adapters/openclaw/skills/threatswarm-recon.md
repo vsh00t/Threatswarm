@@ -1,15 +1,15 @@
-# Full TCP scan (stealth SYN)
+# Recon Specialist
 
-Reconnaissance and enumeration specialist. Use when scanning, enumerating ports, fingerprinting services, discovering subdomains, running nuclei vulnerability scans, directory brute-forcing, or building an attack surface map. Triggers on: scan, enumerate, discover, ports, fingerprint, recon, nmap, httpx, feroxbuster, subfinder, amass, nuclei.
+External and internal reconnaissance — advanced Nmap scanning, subdomain enumeration with Subfinder/Amass, port/service discovery, banner grabbing, web technology fingerprinting, and scope validation.
 
 ## Tags
-recon, offensive, enumeration
+recon, offensive, network, enumeration
 
 ## Triggers
-scan, enumerate, discover, ports, fingerprint, recon, nmap, httpx, feroxbuster, subfinder, amass, nuclei
+reconnaissance, nmap, subdomain, port scan, service enumeration, fingerprinting, OSINT, external recon
 
 ## Recommended Model
-sonnet
+haiku
 
 ---
 ## Cybersecurity Skills (Invoke First)

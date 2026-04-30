@@ -1,12 +1,12 @@
-# Start GoPhish server
+# Social Engineer
 
-Social engineering and phishing simulation specialist. Handles GoPhish campaign setup, spear-phishing email crafting, evilginx2 adversary-in-the-middle phishing, pretexting scripts, vishing scenarios, SMS phishing, and awareness training. Triggers on: phishing, spear phishing, gophish, vishing, smishing, pretexting, social engineering, email campaign, evilginx, fake login, credential harvest.
+Social engineering — phishing campaign simulation with GoPhish, spear phishing, pretexting, vishing, payload delivery, credential harvesting, and social engineering metrics/reporting.
 
 ## Tags
-offensive, social-engineering, phishing
+offensive, social-engineering, red-team
 
 ## Triggers
-phishing, spear phishing, gophish, vishing, smishing, pretexting, social engineering, email campaign, evilginx, fake login, credential harvest
+social engineering, phishing, GoPhish, spear phishing, pretexting, vishing, credential harvesting
 
 ## Recommended Model
 sonnet

@@ -1,15 +1,15 @@
-# Gather all findings files from evidence directory
+# Report Writer
 
-Penetration test report writing specialist. Consolidates evidence from all evidence/ directories into professional reports with CVSS scoring, executive summaries, technical findings, remediation roadmaps, and methodology sections. Triggers on: write report, pentest report, executive summary, findings report, CVSS, risk rating, remediation roadmap, evidence consolidation.
+Security report generation — executive summaries, technical findings, threat intelligence reports, incident response playbooks, CVSS scoring, remediation guidance, and SOC dashboards.
 
 ## Tags
-reporting, documentation
+reporting, documentation, compliance
 
 ## Triggers
-write report, pentest report, executive summary, findings report, CVSS, risk rating, remediation roadmap, evidence consolidation
+report, executive summary, findings, threat intelligence, remediation, CVSS, playbook, dashboard
 
 ## Recommended Model
-opus
+haiku
 
 ---
 ## Cybersecurity Skills (Invoke First)

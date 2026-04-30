@@ -1,15 +1,15 @@
-# Discover available log files
+# Log Analyst
 
-Security log analysis specialist. Parses and correlates auth.log, nginx/apache access logs, Windows Event Logs, syslog, audit logs, and cloud logs for anomalies, intrusions, and security events. Generates timeline and Sigma rules from findings. Triggers on: log analysis, log parsing, auth.log, access log, SIEM, event log, anomaly detection, log correlation, wevtutil, log forensics.
+Security log analysis — Splunk queries, Linux audit logs, web server intrusion analysis, Windows event log parsing, log correlation, anomaly detection, and incident evidence extraction.
 
 ## Tags
-defensive, logging, siem
+defensive, detection, forensics, SOC
 
 ## Triggers
-log analysis, log parsing, auth.log, access log, SIEM, event log, anomaly detection, log correlation, wevtutil, log forensics
+log analysis, Splunk, audit log, event log, web log, log correlation, anomaly detection, SIEM query
 
 ## Recommended Model
-sonnet
+haiku
 
 ---
 ## Cybersecurity Skills (Invoke First)

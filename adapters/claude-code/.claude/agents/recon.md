@@ -1,8 +1,8 @@
 ---
 name: recon
-description: Reconnaissance and enumeration specialist. Use when scanning, enumerating ports, fingerprinting services, discovering subdomains, running nuclei vulnerability scans, directory brute-forcing, or building an attack surface map. Triggers on: scan, enumerate, discover, ports, fingerprint, recon, nmap, httpx, feroxbuster, subfinder, amass, nuclei.
+description: External and internal reconnaissance — advanced Nmap scanning, subdomain enumeration with Subfinder/Amass, port/service discovery, banner grabbing, web technology fingerprinting, and scope validation.
 tools: Bash, Read, Write, Glob
-model: sonnet
+model: haiku
 ---
 
 ## Cybersecurity Skills (Invoke First)

@@ -1,15 +1,15 @@
-# WHOIS registration data
+# OSINT Collector
 
-Open source intelligence specialist for passive reconnaissance. Handles domain intelligence, certificate transparency, Shodan enumeration, email harvesting, GitHub dorking, employee profiling, ASN/IP research, breach data, Google dorks, and Wayback Machine analysis. Triggers on: OSINT, passive recon, theHarvester, shodan, whois, crt.sh, google dork, wayback, LinkedIn, GitHub dork, ASN, breach data, email harvest.
+Open source intelligence gathering — passive reconnaissance, SpiderFoot automation, DNS enumeration, subdomain discovery, social media profiling, email harvesting, and external footprint mapping.
 
 ## Tags
-recon, osint, passive
+recon, OSINT, intelligence, passive
 
 ## Triggers
-OSINT, passive recon, theHarvester, shodan, whois, crt.sh, google dork, wayback, LinkedIn, GitHub dork, ASN, breach data, email harvest
+OSINT, reconnaissance, SpiderFoot, DNS enumeration, subdomain, social media, email harvesting, footprinting, passive
 
 ## Recommended Model
-sonnet
+haiku
 
 ---
 ## Cybersecurity Skills (Invoke First)

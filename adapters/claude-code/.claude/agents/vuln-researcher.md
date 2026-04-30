@@ -1,6 +1,6 @@
 ---
 name: vuln-researcher
-description: Vulnerability research and CVE analysis specialist. Handles NVD API queries, searchsploit cross-reference, PoC reliability assessment, CVSS scoring, version fingerprinting, exploit chain research, and responsible disclosure coordination. Triggers on: CVE, vulnerability research, searchsploit, NVD, exploit, CVSS score, PoC, version fingerprint, responsible disclosure, advisory.
+description: Vulnerability research — CVE analysis, KEV catalog prioritization, PoC development, patch diffing, zero-day research methodology, and responsible disclosure.
 tools: Bash, Read, Write, Grep
 model: opus
 ---

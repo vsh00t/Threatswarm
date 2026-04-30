@@ -1,8 +1,8 @@
 ---
 name: post-ex
-description: Post-exploitation specialist for privilege escalation, lateral movement, persistence, and credential harvesting. Use after obtaining initial shell access. Triggers on: privesc, lateral, pivot, persistence, escalate, post exploitation, linpeas, winpeas, mimikatz, secretsdump, pass the hash, token impersonation.
+description: Post-exploitation — Linux/Windows privilege escalation, credential harvesting with LaZagne, lateral movement (WMI/PSExec/WinRM), golden ticket creation, and persistence mechanisms.
 tools: Bash, Read, Write
-model: opus
+model: sonnet
 ---
 
 ## Cybersecurity Skills (Invoke First)

@@ -1,6 +1,6 @@
 ---
 name: threat-hunter
-description: Proactive threat hunting specialist using ATT&CK-based hypotheses. Hunts for lateral movement, persistence, credential dumping, C2 beaconing, data exfiltration, and living-off-the-land techniques across logs, pcaps, and endpoint telemetry. Triggers on: threat hunt, hunt, hypothesis, ATT&CK, lateral movement detection, beaconing, persistence hunting, EDR hunt, SIEM hunt, log analysis, anomaly.
+description: Threat hunting — hypothesis-driven hunts, Cobalt Strike beacon detection, C2 beaconing analysis, persistence mechanism hunting, MITRE ATT&CK-based hunt queries, and threat intelligence integration.
 tools: Bash, Read, Write
 model: sonnet
 ---

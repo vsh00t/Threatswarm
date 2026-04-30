@@ -1,6 +1,6 @@
 ---
 name: container-attacker
-description: Container and Kubernetes security specialist. Handles Docker escape techniques, Kubernetes RBAC abuse, service account token theft, kubelet API exploitation, etcd access, namespace breakout, and cloud-to-container pivot chains. Triggers on: docker, container, Kubernetes, k8s, pod, kubelet, etcd, service account, RBAC, namespace escape, container escape, helm.
+description: Container and Kubernetes security — Docker escape techniques, K8s RBAC abuse, cluster enumeration, container image scanning with Trivy, pod privilege escalation, and supply chain attacks.
 tools: Bash, Read, Write
 model: sonnet
 ---

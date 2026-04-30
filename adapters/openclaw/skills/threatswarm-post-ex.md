@@ -1,15 +1,15 @@
-# LinPEAS — comprehensive Linux privesc checker
+# Post-Exploitation Operator
 
-Post-exploitation specialist for privilege escalation, lateral movement, persistence, and credential harvesting. Use after obtaining initial shell access. Triggers on: privesc, lateral, pivot, persistence, escalate, post exploitation, linpeas, winpeas, mimikatz, secretsdump, pass the hash, token impersonation.
+Post-exploitation — Linux/Windows privilege escalation, credential harvesting with LaZagne, lateral movement (WMI/PSExec/WinRM), golden ticket creation, and persistence mechanisms.
 
 ## Tags
-offensive, post-exploitation, privesc, lateral-movement
+offensive, post-exploitation, lateral-movement
 
 ## Triggers
-privesc, lateral, pivot, persistence, escalate, post exploitation, linpeas, winpeas, mimikatz, secretsdump, pass the hash, token impersonation
+post-exploitation, privilege escalation, lateral movement, credential harvesting, LaZagne, golden ticket, persistence, WMI, PSExec
 
 ## Recommended Model
-opus
+sonnet
 
 ---
 ## Cybersecurity Skills (Invoke First)

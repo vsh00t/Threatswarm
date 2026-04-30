@@ -1,4 +1,4 @@
-# Cybersecurity Workspace — Master Context (Generated 2026-04-30T04:35:13Z)
+# Cybersecurity Workspace — Master Context (Generated 2026-04-30T04:56:26Z)
 
 ## Scope Enforcement (MANDATORY — ZERO EXCEPTIONS)
 **ALL targets MUST be listed in `scope.txt` before any network tool runs.**
@@ -8,33 +8,38 @@ Add targets: IP, CIDR, or domain — one per line, comments start with `#`.
 ## Agent Delegation Table
 | Category | Agent | Description |
 |----------|-------|-------------|
-| offensive / ad | `active-directory` | Active Directory and Windows domain attack specialist. Use for Kerberoasting, AS... |
-| offensive / api | `api-attacker` | API security testing specialist for REST, GraphQL, gRPC, and WebSocket APIs. Han... |
-| defensive / hardening | `blue-team` | Defensive security and hardening specialist. Creates detection rules, hardens Li... |
-| offensive / c2 | `c2-operator` | Command and control infrastructure specialist for authorized red team operations... |
-| offensive / cloud | `cloud-attacker` | Cloud penetration testing specialist for AWS, Azure, and GCP. Handles IAM enumer... |
-| compliance / defensive | `compliance-scanner` | Compliance and security standards assessment specialist. Handles CIS benchmarks,... |
-| offensive / containers | `container-attacker` | Container and Kubernetes security specialist. Handles Docker escape techniques, ... |
-| offensive / crypto | `crypto-attacker` | Cryptography and TLS security specialist. Handles TLS configuration auditing, JW... |
-| defensive / forensics | `dfir` | Digital forensics and incident response specialist. Handles triage, memory acqui... |
-| offensive / evasion | `evasion` | Antivirus and EDR evasion specialist for authorized red team engagements. Handle... |
-| offensive / exploitation | `exploit` | Exploitation specialist for gaining initial access. Use when exploiting CVEs, ru... |
-| offensive / iot | `iot-attacker` | IoT and embedded systems security specialist. Handles firmware extraction and an... |
-| defensive / logging | `log-analyst` | Security log analysis specialist. Parses and correlates auth.log, nginx/apache a... |
-| malware / analysis | `malware-analyst` | Malware analysis specialist for static and dynamic analysis. Handles PE/ELF/APK ... |
-| offensive / mobile | `mobile-attacker` | Mobile application security specialist for Android and iOS. Handles APK decompil... |
-| offensive / network | `network-ops` | Network penetration testing specialist for ARP attacks, MitM, packet capture, SN... |
-| recon / osint | `osint` | Open source intelligence specialist for passive reconnaissance. Handles domain i... |
-| offensive / credential-access | `password-attacks` | Password cracking and credential attack specialist. Use when working with passwo... |
-| offensive / post-exploitation | `post-ex` | Post-exploitation specialist for privilege escalation, lateral movement, persist... |
-| recon / offensive | `recon` | Reconnaissance and enumeration specialist. Use when scanning, enumerating ports,... |
-| reporting / documentation | `report-writer` | Penetration test report writing specialist. Consolidates evidence from all evide... |
-| offensive / malware | `reverse-engineer` | Binary reverse engineering and exploit development specialist. Handles static an... |
-| offensive / social-engineering | `social-engineer` | Social engineering and phishing simulation specialist. Handles GoPhish campaign ... |
-| defensive / threat-hunting | `threat-hunter` | Proactive threat hunting specialist using ATT&CK-based hypotheses. Hunts for lat... |
-| research / vulnerability | `vuln-researcher` | Vulnerability research and CVE analysis specialist. Handles NVD API queries, sea... |
-| offensive / web | `web-attacker` | Web application penetration testing — SQL injection, XSS, SSRF, LFI, IDOR, JWT a... |
-| offensive / wireless | `wireless-attacker` | Wireless network penetration testing specialist. Handles WPA2/WPA3 capture and c... |
+| offensive / windows | `active-directory` | Active Directory exploitation specialist — BloodHound attack path analysis, Kerb... |
+| offensive / web | `api-attacker` | API security testing — REST/GraphQL/SOAP testing, IDOR, BOLA/BFLA, broken authen... |
+| defensive / detection | `blue-team` | Defensive security — detection rule creation (Sigma), CIS hardening, log configu... |
+| offensive / red-team | `c2-operator` | Command and Control infrastructure — Sliver framework, Havoc C2, Cobalt Strike p... |
+| offensive / cloud | `cloud-attacker` | Cloud penetration testing — AWS, Azure, GCP enumeration, Pacu automation, S3 buc... |
+| offensive / cloud | `cloud-postex` | Cloud post-exploitation — IAM persistence, data exfiltration from cloud storage,... |
+| defensive / compliance | `compliance-scanner` | Compliance assessment — CIS benchmarks, PCI-DSS, NIST CSF, SOC 2, ISO 27001 gap ... |
+| offensive / containers | `container-attacker` | Container and Kubernetes security — Docker escape techniques, K8s RBAC abuse, cl... |
+| offensive / web | `crypto-attacker` | Cryptographic security assessment — SSL/TLS analysis, JWT algorithm confusion, p... |
+| defensive / forensics | `dfir` | Digital Forensics and Incident Response — memory forensics with Volatility3, dis... |
+| offensive / red-team | `evasion` | Evasion techniques — AMSI bypass, ETW patching, process injection, living-off-th... |
+| offensive / exploitation | `exploit` | Vulnerability exploitation — Metasploit framework, manual exploit development, R... |
+| offensive / IoT | `iot-attacker` | IoT and OT security assessment — firmware analysis with Binwalk/Ghidra, emulatio... |
+| defensive / detection | `log-analyst` | Security log analysis — Splunk queries, Linux audit logs, web server intrusion a... |
+| defensive / malware | `malware-analyst` | Malware analysis — Linux ELF and Windows PE analysis, YARA rule creation, sandbo... |
+| offensive / mobile | `mobile-attacker` | Mobile application security — Android APK analysis (apktool/jadx), iOS IPA analy... |
+| offensive / network | `network-ops` | Network-level attacks — ARP spoofing, man-in-the-middle interception, SMB relay,... |
+| recon / OSINT | `osint` | Open source intelligence gathering — passive reconnaissance, SpiderFoot automati... |
+| offensive / credentials | `password-attacks` | Password and credential attacks — hash cracking with hashcat, credential stuffin... |
+| offensive / post-exploitation | `post-ex` | Post-exploitation — Linux/Windows privilege escalation, credential harvesting wi... |
+| collaborative / offensive | `purple-team` | Purple team operations — MITRE ATT&CK mapping, detection gap identification, off... |
+| recon / offensive | `recon` | External and internal reconnaissance — advanced Nmap scanning, subdomain enumera... |
+| offensive / red-team | `red-infra` | Red team infrastructure — C2 deployment, redirector chains, domain registration ... |
+| reporting / documentation | `report-writer` | Security report generation — executive summaries, technical findings, threat int... |
+| offensive / reverse-engineering | `reverse-engineer` | Binary reverse engineering — Ghidra analysis, .NET decompilation with dnSpy, bin... |
+| offensive / network | `segmentation-tester` | Network segmentation testing — cross-segment access validation, firewall rule te... |
+| offensive / social-engineering | `social-engineer` | Social engineering — phishing campaign simulation with GoPhish, spear phishing, ... |
+| defensive / detection | `threat-hunter` | Threat hunting — hypothesis-driven hunts, Cobalt Strike beacon detection, C2 bea... |
+| defensive / compliance | `vuln-management` | Vulnerability management — Nuclei template scanning, authenticated scanning, Nes... |
+| offensive / research | `vuln-researcher` | Vulnerability research — CVE analysis, KEV catalog prioritization, PoC developme... |
+| offensive / web | `web-attacker` | Web application penetration testing — SQLMap exploitation, XSS testing, SSRF, de... |
+| offensive / wireless | `wireless-attacker` | Wireless network security — WPA/WPA3 handshake capture and cracking, PMKID attac... |
 
 **NEVER run active recon or exploitation in the main conversation thread.**
 **ALWAYS delegate to the appropriate agent.**

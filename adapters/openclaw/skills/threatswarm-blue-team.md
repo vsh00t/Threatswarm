@@ -1,12 +1,12 @@
-# CIS Benchmark assessment with Lynis
+# Blue Team Defender
 
-Defensive security and hardening specialist. Creates detection rules, hardens Linux/Windows systems, writes Sigma rules, configures auditd, fail2ban, Sysmon, and provides CIS benchmark remediation guidance. Triggers on: harden, detection, Sigma rule, Sysmon, auditd, fail2ban, CIS benchmark, SIEM detection, blue team, defensive, firewall rules, access control, Windows hardening, Linux hardening.
+Defensive security — detection rule creation (Sigma), CIS hardening, log configuration, incident response playbooks, EDR tuning, SIEM correlation, and security baseline enforcement.
 
 ## Tags
-defensive, hardening, detection
+defensive, detection, hardening, compliance
 
 ## Triggers
-harden, detection, Sigma rule, Sysmon, auditd, fail2ban, CIS benchmark, SIEM detection, blue team, defensive, firewall rules, access control, Windows hardening, Linux hardening
+blue team, detection, hardening, SIEM, Sigma rules, CIS benchmark, EDR, SOC, defensive
 
 ## Recommended Model
 sonnet

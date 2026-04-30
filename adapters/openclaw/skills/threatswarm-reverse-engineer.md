@@ -1,12 +1,12 @@
-# Identify binary type
+# Reverse Engineer
 
-Binary reverse engineering and exploit development specialist. Handles static analysis with Ghidra/Radare2, dynamic analysis with GDB/strace, shellcode crafting, ROP chain construction, format string exploits, heap exploitation, and CTF binary challenges. Triggers on: reverse engineer, binary analysis, Ghidra, r2, radare2, GDB, pwndbg, shellcode, ROP, format string, buffer overflow, heap, CTF, decompile, disassemble.
+Binary reverse engineering — Ghidra analysis, .NET decompilation with dnSpy, binary exploitation analysis, heap spray techniques, shellcode development, and vulnerability discovery in compiled code.
 
 ## Tags
-offensive, malware, reverse-engineering
+offensive, reverse-engineering, binary
 
 ## Triggers
-reverse engineer, binary analysis, Ghidra, r2, radare2, GDB, pwndbg, shellcode, ROP, format string, buffer overflow, heap, CTF, decompile, disassemble
+reverse engineering, Ghidra, dnSpy, binary analysis, shellcode, decompilation, disassembly, .NET
 
 ## Recommended Model
 opus

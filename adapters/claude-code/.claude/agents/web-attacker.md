@@ -1,6 +1,6 @@
 ---
 name: web-attacker
-description: Web application penetration testing — SQL injection, XSS, SSRF, LFI, IDOR, JWT attacks, GraphQL, API parameter discovery, and OWASP Top 10 exploitation
+description: Web application penetration testing — SQLMap exploitation, XSS testing, SSRF, deserialization attacks, authentication bypass, file inclusion, and OWASP Top 10 systematic assessment.
 tools: Bash, Read, Write
 model: sonnet
 ---
