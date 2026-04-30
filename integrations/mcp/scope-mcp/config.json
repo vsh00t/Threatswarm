@@ -1,0 +1,8 @@
+{
+  "name": "threatswarm-scope",
+  "transport": "stdio",
+  "command": "python3",
+  "args": ["/tmp/ThreatSwarm/integrations/mcp/scope-mcp/server.py"],
+  "description": "ThreatSwarm scope validation — check commands, list/add targets against scope.txt",
+  "tools": ["scope_check", "scope_list", "scope_add"]
+}

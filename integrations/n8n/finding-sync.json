@@ -1,0 +1,215 @@
+{
+  "name": "ThreatSwarm — Finding Sync",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "event": "fileCreatedOrUpdated",
+        "path": "/data/threatswarm",
+        "recursive": true,
+        "options": {}
+      },
+      "id": "fs-trigger",
+      "name": "Watch Evidence Directory",
+      "type": "n8n-nodes-base.localFileTrigger",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-evidence-json",
+              "leftValue": "={{ $json.path || $json.file }}",
+              "rightValue": "evidence_manifest",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "filter-manifest",
+      "name": "Filter Manifest Changes",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [470, 300]
+    },
+    {
+      "parameters": {
+        "command": "cat {{$json.path || $json.file}}"
+      },
+      "id": "read-manifest",
+      "name": "Read Evidence Manifest",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [690, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse manifest and filter for CRITICAL/HIGH findings\ntry {\n  const manifest = JSON.parse($input.first().json.stdout);\n  const findings = (manifest.evidence || []).filter(\n    f => {\n      const sev = (f.severity || '').toUpperCase();\n      return sev === 'CRITICAL' || sev === 'HIGH';\n    }\n  );\n  \n  if (findings.length === 0) {\n    return []; // Stop execution — no critical/high findings\n  }\n  \n  return findings.map(f => ({\n    json: {\n      severity: f.severity,\n      target: f.target || f.file,\n      title: f.title || f.type || 'Finding',\n      detail: f.detail || '',\n      engagement: manifest.engagement || 'unknown',\n      timestamp: f.timestamp || manifest.updated || new Date().toISOString(),\n    }\n  }));\n} catch (e) {\n  return []; // Invalid JSON, skip\n}"
+      },
+      "id": "extract-findings",
+      "name": "Extract Critical/High Findings",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [910, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true
+          },
+          "conditions": [
+            {
+              "id": "condition-has-findings",
+              "leftValue": "={{ $json.severity }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-findings",
+      "name": "Check for Findings",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [1130, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Build alert message for each finding\nconst items = $input.all();\nreturn items.map(item => {\n  const f = item.json;\n  const emoji = f.severity === 'CRITICAL' ? '🔴' : '🟠';\n  const text = `${emoji} *${f.severity}* — ${f.title}\\n🎯 *Target:* ${f.target}\\n📋 ${f.detail ? f.detail.substring(0, 300) : 'No details'}\\n📌 *Engagement:* ${f.engagement}`;\n  return {\n    json: { ...f, alertText: text }\n  };\n});"
+      },
+      "id": "build-alert",
+      "name": "Build Alert Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1350, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.telegram.org/bot{{$credentials.telegramBotToken}}/sendMessage",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"chat_id\": \"{{$credentials.telegramChatId}}\",\n  \"text\": \"🜏 *ThreatSwarm — New Critical/High Finding*\\n\\n{{$json.alertText}}\",\n  \"parse_mode\": \"Markdown\"\n}",
+        "options": {}
+      },
+      "id": "telegram-alert",
+      "name": "Send Telegram Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1570, 300],
+      "credentials": {
+        "telegramApi": {
+          "id": "PLACEHOLDER_CREDENTIAL_ID",
+          "name": "Telegram Bot API"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Watch Evidence Directory": {
+      "main": [
+        [
+          {
+            "node": "Filter Manifest Changes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Manifest Changes": {
+      "main": [
+        [
+          {
+            "node": "Read Evidence Manifest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Evidence Manifest": {
+      "main": [
+        [
+          {
+            "node": "Extract Critical/High Findings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Critical/High Findings": {
+      "main": [
+        [
+          {
+            "node": "Check for Findings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check for Findings": {
+      "main": [
+        [
+          {
+            "node": "Build Alert Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Alert Message": {
+      "main": [
+        [
+          {
+            "node": "Send Telegram Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "threatswarm",
+      "createdAt": "2026-04-30T00:00:00.000Z",
+      "updatedAt": "2026-04-30T00:00:00.000Z"
+    }
+  ],
+  "triggerCount": 1,
+  "updatedAt": "2026-04-30T00:00:00.000Z",
+  "versionId": "1"
+}

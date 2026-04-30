@@ -1,0 +1,227 @@
+{
+  "name": "ThreatSwarm — Report Notification",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "event": "fileCreated",
+        "path": "/data/threatswarm",
+        "recursive": true,
+        "options": {}
+      },
+      "id": "fs-trigger",
+      "name": "Watch Reports Directory",
+      "type": "n8n-nodes-base.localFileTrigger",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-report-file",
+              "leftValue": "={{ $json.path || $json.file }}",
+              "rightValue": "report_",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "condition-markdown",
+              "leftValue": "={{ $json.path || $json.file }}",
+              "rightValue": ".md",
+              "operator": {
+                "type": "string",
+                "operation": "endsWith"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "filter-reports",
+      "name": "Filter Report Files",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [470, 300]
+    },
+    {
+      "parameters": {
+        "command": "head -30 '{{$json.path || $json.file}}'"
+      },
+      "id": "read-report",
+      "name": "Read Report Header",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [690, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse report metadata from filename and header\nconst file = $input.first().json;\nconst path = file.path || file.file;\nconst stdout = file.stdout || '';\n\n// Extract report type from filename: report_<type>_<timestamp>.md\nconst match = path.match(/report_([a-z]+)_/);\nconst reportType = match ? match[1] : 'unknown';\n\n// Extract first heading\nconst titleMatch = stdout.match(/^# (.+)$/m);\nconst title = titleMatch ? titleMatch[1] : 'Pentest Report';\n\n// Get file size\nconst fs = require('fs');\nlet fileSize = 0;\ntry {\n  fileSize = fs.statSync(path).size;\n} catch (e) {}\n\nconst sizeStr = fileSize > 1024 * 1024 \n  ? (fileSize / (1024 * 1024)).toFixed(1) + ' MB'\n  : (fileSize / 1024).toFixed(1) + ' KB';\n\nreturn [{\n  json: {\n    path,\n    reportType,\n    title,\n    sizeHuman: sizeStr,\n    sizeBytes: fileSize,\n    timestamp: new Date().toISOString(),\n  }\n}];"
+      },
+      "id": "parse-report",
+      "name": "Parse Report Metadata",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [910, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.telegram.org/bot{{$credentials.telegramBotToken}}/sendMessage",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"chat_id\": \"{{$credentials.telegramChatId}}\",\n  \"text\": \"🜏 *ThreatSwarm — Report Generated*\\n\\n📄 *Title:* {{$json.title}}\\n📊 *Type:* {{$json.reportType}}\\n📁 *Size:* {{$json.sizeHuman}}\\n⏰ *Time:* {{$json.timestamp}}\\n📂 `{{$json.path}}`\",\n  \"parse_mode\": \"Markdown\"\n}",
+        "options": {}
+      },
+      "id": "telegram-notify",
+      "name": "Send Telegram Notification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1130, 300],
+      "credentials": {
+        "telegramApi": {
+          "id": "PLACEHOLDER_CREDENTIAL_ID",
+          "name": "Telegram Bot API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.telegram.org/bot{{$credentials.telegramBotToken}}/sendDocument",
+        "sendBody": true,
+        "specifyBody": "formData",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "chat_id",
+              "value": "={{$credentials.telegramChatId}}"
+            },
+            {
+              "name": "caption",
+              "value": "📎 Full report attached"
+            }
+          ]
+        },
+        "options": {
+          "formData": {
+            "multipart": true
+          }
+        }
+      },
+      "id": "telegram-attach",
+      "name": "Send Report as Document",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1350, 420],
+      "credentials": {
+        "telegramApi": {
+          "id": "PLACEHOLDER_CREDENTIAL_ID",
+          "name": "Telegram Bot API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prepare file for document upload\nconst items = $input.all();\nreturn items.map(item => ({\n  json: {\n    ...item.json,\n    fileData: {\n      name: item.json.path.split('/').pop(),\n      path: item.json.path,\n      mimeType: 'text/markdown'\n    }\n  }\n}));"
+      },
+      "id": "prepare-file",
+      "name": "Prepare File Upload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1130, 420]
+    }
+  ],
+  "connections": {
+    "Watch Reports Directory": {
+      "main": [
+        [
+          {
+            "node": "Filter Report Files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Report Files": {
+      "main": [
+        [
+          {
+            "node": "Read Report Header",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Report Header": {
+      "main": [
+        [
+          {
+            "node": "Parse Report Metadata",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Report Metadata": {
+      "main": [
+        [
+          {
+            "node": "Send Telegram Notification",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Prepare File Upload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare File Upload": {
+      "main": [
+        [
+          {
+            "node": "Send Report as Document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "threatswarm",
+      "createdAt": "2026-04-30T00:00:00.000Z",
+      "updatedAt": "2026-04-30T00:00:00.000Z"
+    }
+  ],
+  "triggerCount": 1,
+  "updatedAt": "2026-04-30T00:00:00.000Z",
+  "versionId": "1"
+}

@@ -1,0 +1,193 @@
+{
+  "name": "ThreatSwarm Pentest Engagement",
+  "type": "Milestone",
+  "description": "Phases and tasks for a penetration testing engagement tracked in OpenProject",
+  "phases": [
+    {
+      "name": "1. Scoping & Planning",
+      "type": "Milestone",
+      "description": "Define engagement scope, rules of engagement, and communication plan",
+      "tasks": [
+        {
+          "subject": "Define in-scope targets (IPs, domains, applications)",
+          "type": "Task",
+          "description": "Create scope.txt with all authorized targets. Include IP ranges, CIDR blocks, domains, and specific applications.",
+          "priority": "High"
+        },
+        {
+          "subject": "Define out-of-scope targets and rules of engagement",
+          "type": "Task",
+          "description": "Document what is explicitly NOT in scope. Define testing windows, DoS policy, social engineering restrictions.",
+          "priority": "High"
+        },
+        {
+          "subject": "Set up communication channels",
+          "type": "Task",
+          "description": "Configure secure communication (encrypted email, Signal/Telegram). Establish POC escalation path.",
+          "priority": "Medium"
+        },
+        {
+          "subject": "Initialize ThreatSwarm engagement workspace",
+          "type": "Task",
+          "description": "Create evidence directory, initialize scope.txt, set up engagement metadata.",
+          "priority": "High"
+        }
+      ]
+    },
+    {
+      "name": "2. Reconnaissance",
+      "type": "Milestone",
+      "description": "Passive and active reconnaissance of in-scope targets",
+      "tasks": [
+        {
+          "subject": "Passive reconnaissance — OSINT",
+          "type": "Task",
+          "description": "WHOIS, DNS enumeration, search engine dorking, social media profiling, subdomain discovery (subfinder, amass).",
+          "priority": "High"
+        },
+        {
+          "subject": "Active scanning — port/service enumeration",
+          "type": "Task",
+          "description": "Nmap full port scan, service version detection, OS fingerprinting. Identify attack surface.",
+          "priority": "High"
+        },
+        {
+          "subject": "Web application mapping",
+          "type": "Task",
+          "description": "Directory brute-forcing, technology fingerprinting, API endpoint discovery, sitemap extraction.",
+          "priority": "Medium"
+        },
+        {
+          "subject": "Document all discovered assets",
+          "type": "Task",
+          "description": "Update scope with discovered hosts/services. Create asset inventory in evidence directory.",
+          "priority": "Medium"
+        }
+      ]
+    },
+    {
+      "name": "3. Vulnerability Assessment",
+      "type": "Milestone",
+      "description": "Identify and validate vulnerabilities",
+      "tasks": [
+        {
+          "subject": "Automated vulnerability scanning",
+          "type": "Task",
+          "description": "Run Nessus/Nuclei scans against discovered targets. Document all findings with evidence.",
+          "priority": "High"
+        },
+        {
+          "subject": "Manual vulnerability testing",
+          "type": "Task",
+          "description": "Manual testing of web apps, APIs, authentication mechanisms, authorization controls, business logic.",
+          "priority": "High"
+        },
+        {
+          "subject": "Network vulnerability testing",
+          "type": "Task",
+          "description": "Test network protocols, SMB, RDP, SSH, LDAP, DNS, SNMP for misconfigurations and vulnerabilities.",
+          "priority": "Medium"
+        },
+        {
+          "subject": "Validate and triage all findings",
+          "type": "Task",
+          "description": "Remove false positives, confirm exploitable findings, assign severity ratings (CVSS/CVSSv4).",
+          "priority": "High"
+        }
+      ]
+    },
+    {
+      "name": "4. Exploitation",
+      "type": "Milestone",
+      "description": "Verify impact of critical and high findings",
+      "tasks": [
+        {
+          "subject": "Exploit CRITICAL findings",
+          "type": "Task",
+          "description": "Demonstrate impact of critical vulnerabilities. Capture evidence (screenshots, logs, POC).",
+          "priority": "High"
+        },
+        {
+          "subject": "Exploit HIGH findings",
+          "type": "Task",
+          "description": "Demonstrate impact of high-severity vulnerabilities. Document attack chain.",
+          "priority": "High"
+        },
+        {
+          "subject": "Post-exploitation assessment",
+          "type": "Task",
+          "description": "Assess lateral movement potential, privilege escalation, data exfiltration risk. Stay within scope.",
+          "priority": "Medium"
+        },
+        {
+          "subject": "Verify evidence chain integrity",
+          "type": "Task",
+          "description": "Run evidence_verify to confirm all screenshots and captures are intact and hash-verified.",
+          "priority": "Medium"
+        }
+      ]
+    },
+    {
+      "name": "5. Reporting",
+      "type": "Milestone",
+      "description": "Generate and deliver final reports",
+      "tasks": [
+        {
+          "subject": "Generate technical report",
+          "type": "Task",
+          "description": "Full technical report with all findings, steps to reproduce, evidence references, and remediation steps.",
+          "priority": "High"
+        },
+        {
+          "subject": "Generate executive summary",
+          "type": "Task",
+          "description": "High-level summary for management with risk overview, key findings, and prioritized recommendations.",
+          "priority": "High"
+        },
+        {
+          "subject": "Generate compliance mapping (if applicable)",
+          "type": "Task",
+          "description": "Map findings to PCI-DSS, SOC 2, ISO 27001, or other applicable frameworks.",
+          "priority": "Low"
+        },
+        {
+          "subject": "Final review and delivery",
+          "type": "Task",
+          "description": "Internal review of report, client delivery via secure channel, evidence package export.",
+          "priority": "High"
+        }
+      ]
+    },
+    {
+      "name": "6. Debrief & Remediation Support",
+      "type": "Milestone",
+      "description": "Walk-through with client and remediation guidance",
+      "tasks": [
+        {
+          "subject": "Schedule and conduct findings debrief",
+          "type": "Task",
+          "description": "Present findings to client stakeholders. Walk through attack chains and business impact.",
+          "priority": "High"
+        },
+        {
+          "subject": "Provide remediation guidance",
+          "type": "Task",
+          "description": "Detailed remediation steps for each finding. Prioritized by risk and effort.",
+          "priority": "High"
+        },
+        {
+          "subject": "Plan re-test timeline",
+          "type": "Task",
+          "description": "Agree on re-test window after client has implemented fixes. Update scope for re-test.",
+          "priority": "Medium"
+        },
+        {
+          "subject": "Archive engagement and lessons learned",
+          "type": "Task",
+          "description": "Archive evidence, update ThreatSwarm knowledge base, document lessons learned for future engagements.",
+          "priority": "Low"
+        }
+      ]
+    }
+  ]
+}

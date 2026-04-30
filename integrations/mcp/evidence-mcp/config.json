@@ -1,0 +1,8 @@
+{
+  "name": "threatswarm-evidence",
+  "transport": "stdio",
+  "command": "python3",
+  "args": ["/tmp/ThreatSwarm/integrations/mcp/evidence-mcp/server.py"],
+  "description": "ThreatSwarm evidence management — capture, verify, list, and export pentest evidence",
+  "tools": ["evidence_capture_screenshot", "evidence_verify", "evidence_list", "evidence_export"]
+}

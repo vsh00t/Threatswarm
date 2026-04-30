@@ -1,0 +1,8 @@
+{
+  "name": "threatswarm-report",
+  "transport": "stdio",
+  "command": "python3",
+  "args": ["/tmp/ThreatSwarm/integrations/mcp/report-mcp/server.py"],
+  "description": "ThreatSwarm report generation — generate executive/technical/compliance/full reports from evidence",
+  "tools": ["report_generate", "report_template_list"]
+}
