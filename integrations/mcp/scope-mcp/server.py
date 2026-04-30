@@ -14,6 +14,9 @@ import json
 import sys
 import os
 
+# Add project root to path for shared lib imports
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
+
 # Shared scope logic
 from core.lib.scope_lib import (
     load_scope,

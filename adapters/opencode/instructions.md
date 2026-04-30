@@ -1,6 +1,6 @@
 # ThreatSwarm — OpenCode Penetration Testing Framework
 
-> Generated 2026-04-30T14:51:21Z
+> Generated 2026-04-30T14:53:12Z
 
 ## Scope Enforcement
 **MANDATORY**: Verify all targets in `scope.txt` before any network command. OpenCode has no hook system — manual verification is required.

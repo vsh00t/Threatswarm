@@ -219,6 +219,10 @@ python3 scripts/build.py --all
 - **uvx** (optional, for MCP server execution via `uv`)
 - Pentesting tools referenced by agents (Metasploit, Nmap, Burp Suite, etc.) are **external** — install separately
 
+## No Docker Required
+
+ThreatSwarm runs entirely with Python stdlib + CLI tools. No Docker, no databases, no cloud accounts needed. All scripts use `#!/usr/bin/env python3` with zero external dependencies (only `ipaddress` from stdlib).
+
 ## Verification
 
 ```bash

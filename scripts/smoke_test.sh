@@ -45,8 +45,8 @@ done
 
 echo ""
 echo "── Hooks ──"
-check "scope_check blocks out-of-scope" "echo '{\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"nmap 8.8.8.8\"}}' | python3 core/hooks/scope_check.py 2>&1 | grep -q BLOCKED"
-check "scope_check allows in-scope (exit 0)" "echo '{\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"nmap 192.168.1.100\"}}' | python3 core/hooks/scope_check.py >/dev/null 2>&1; [ \$? -eq 0 ]"
+check "scope_check blocks out-of-scope" "echo '{\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"nmap 8.8.8.8\"}}' | PYTHONPATH=. python3 core/hooks/scope_check.py 2>&1 | grep -qi blocked"
+check "scope_check allows in-scope (exit 0)" "echo '{\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"nmap 192.168.1.100\"}}' | PYTHONPATH=. python3 core/hooks/scope_check.py >/dev/null 2>&1; [ \$? -eq 0 ]"
 
 echo ""
 echo "── Report Pipeline ──"
@@ -91,6 +91,8 @@ check "OpenProject sync.py compiles" "python3 -c \"import py_compile; py_compile
 
 echo ""
 echo "── Clean ──"
+# Clean up __pycache__ created by py_compile checks above before testing
+find . -name '__pycache__' -not -path './.git/*' -type d -exec rm -rf {} + 2>/dev/null || true
 check "No __pycache__ directories" "[ $(find . -name '__pycache__' -not -path './.git/*' -type d 2>/dev/null | wc -l | tr -d ' ') -eq 0 ]"
 
 echo ""
