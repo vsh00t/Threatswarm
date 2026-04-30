@@ -1,7 +1,7 @@
 {
   "name": "threatswarm",
-  "version": "1.0.0",
-  "agents_dir": "core/agents",
-  "rules_dir": "core/rules",
-  "commands_dir": "core/commands"
+  "version": "2.0.0",
+  "description": "ThreatSwarm v2.0 \u2014 Multi-Agent Pentesting Framework for OpenCode",
+  "instructions_file": "adapters/opencode/instructions.md",
+  "config_template": "adapters/opencode/.opencode.json.template"
 }

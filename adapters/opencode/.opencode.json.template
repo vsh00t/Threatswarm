@@ -1,0 +1,27 @@
+{
+  "autoCompact": true,
+  "shell": {
+    "path": "/bin/bash",
+    "args": ["-l"]
+  },
+  "mcpServers": {
+    "scope-mcp": {
+      "type": "stdio",
+      "command": "python3",
+      "args": ["integrations/mcp/scope-mcp/server.py"],
+      "env": []
+    },
+    "evidence-mcp": {
+      "type": "stdio",
+      "command": "python3",
+      "args": ["integrations/mcp/evidence-mcp/server.py"],
+      "env": []
+    },
+    "report-mcp": {
+      "type": "stdio",
+      "command": "python3",
+      "args": ["integrations/mcp/report-mcp/server.py"],
+      "env": []
+    }
+  }
+}
