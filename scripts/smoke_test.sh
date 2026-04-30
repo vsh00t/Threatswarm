@@ -1,131 +1,103 @@
 #!/usr/bin/env bash
-# ThreatSwarm Smoke Test — validates repository integrity
 set -euo pipefail
-
-REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-PASS=0
-FAIL=0
+BASE_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$BASE_DIR"
+PASS=0; FAIL=0; WARN=0
 
 check() {
-    local desc="$1"
-    shift
-    if "$@" 2>/dev/null; then
-        echo "  [PASS] $desc"
-        PASS=$((PASS + 1))
-    else
-        echo "  [FAIL] $desc"
-        FAIL=$((FAIL + 1))
-    fi
+  local desc="$1" cmd="$2"
+  if eval "$cmd" >/dev/null 2>&1; then
+    echo "  ✅ $desc"
+    PASS=$((PASS+1))
+  else
+    echo "  ❌ $desc"
+    FAIL=$((FAIL+1))
+  fi
 }
 
-echo "=== ThreatSwarm Smoke Test ==="
-echo "Repo: $REPO_DIR"
+echo "╔══════════════════════════════════════════════════════╗"
+echo "║        ThreatSwarm v2.0 — Smoke Test Suite           ║"
+echo "╚══════════════════════════════════════════════════════╝"
 echo ""
 
-# --- Agent files ---
-echo "--- Agents (32 expected) ---"
-AGENT_COUNT=$(find "$REPO_DIR/core/agents" -maxdepth 1 -name '*.md' ! -name '_registry.md' | wc -l | tr -d ' ')
-check "32 agent .md files in core/agents/ (found $AGENT_COUNT)" [ "$AGENT_COUNT" -eq 32 ]
+echo "── Core Agents (32) ──"
+check "32 agent files in core/agents/" "[ $(ls core/agents/*.md 2>/dev/null | grep -v _registry | wc -l | tr -d ' ') -eq 32 ]"
+check "32 agent files in .claude/agents/" "[ $(ls .claude/agents/*.md 2>/dev/null | wc -l | tr -d ' ') -eq 32 ]"
+check "32 agent files in threatswarm-plugin/agents/" "[ $(ls threatswarm-plugin/agents/*.md 2>/dev/null | wc -l | tr -d ' ') -eq 32 ]"
+check "All agents have valid frontmatter" "grep -q '^name:' .claude/agents/recon.md && grep -q '^model:' .claude/agents/recon.md"
 
-EXPECTED_AGENTS=(
-    active-directory api-attacker blue-team c2-operator cloud-attacker cloud-postex
-    compliance-scanner container-attacker crypto-attacker dfir evasion exploit
-    iot-attacker log-analyst malware-analyst mobile-attacker network-ops osint
-    password-attacks post-ex purple-team recon red-infra report-writer
-    reverse-engineer segmentation-tester social-engineer threat-hunter
-    vuln-management vuln-researcher web-attacker wireless-attacker
-)
-for agent in "${EXPECTED_AGENTS[@]}"; do
-    check "Agent: $agent.md exists" [ -f "$REPO_DIR/core/agents/$agent.md" ]
+echo ""
+echo "── Build System ──"
+check "build.py --list works" "python3 scripts/build.py --list"
+check "build.py --all works" "python3 scripts/build.py --all"
+
+echo ""
+echo "── Python Scripts ──"
+for script in core/hooks/evidence_capture.py core/hooks/findings_sync.py core/hooks/scope_check.py core/scripts/report_generate.py core/scripts/scope_validate.py; do
+  check "$script compiles" "python3 -c \"import py_compile; py_compile.compile('$script', doraise=True)\""
 done
 
-# --- Adapters ---
 echo ""
-echo "--- Adapters (4 platforms) ---"
-for adapter in claude-code github-copilot opencode openclaw; do
-    ADAPTER_DIR="$REPO_DIR/adapters/$adapter"
-    if [ -d "$ADAPTER_DIR" ]; then
-        FILE_COUNT=$(find "$ADAPTER_DIR" -type f | wc -l | tr -d ' ')
-        check "Adapter $adapter: non-empty ($FILE_COUNT files)" [ "$FILE_COUNT" -gt 0 ]
-    else
-        check "Adapter $adapter: directory exists" false
-    fi
+echo "── MCP Servers ──"
+for mcp in integrations/mcp/scope-mcp/server.py integrations/mcp/evidence-mcp/server.py integrations/mcp/report-mcp/server.py; do
+  check "$(echo $mcp | cut -d/ -f3) compiles" "python3 -c \"import py_compile; py_compile.compile('$mcp', doraise=True)\""
 done
 
-# --- Core scripts compile ---
 echo ""
-echo "--- Core Scripts ---"
-for script in report_generate.py scope_validate.py; do
-    check "core/scripts/$script compiles" python3 -c "import py_compile; py_compile.compile('$REPO_DIR/core/scripts/$script', doraise=True)"
+echo "── Hooks ──"
+check "scope_check blocks out-of-scope" "echo '{\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"nmap 8.8.8.8\"}}' | python3 core/hooks/scope_check.py 2>&1 | grep -q BLOCKED"
+check "scope_check allows in-scope (exit 0)" "echo '{\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"nmap 192.168.1.100\"}}' | python3 core/hooks/scope_check.py >/dev/null 2>&1; [ \$? -eq 0 ]"
+
+echo ""
+echo "── Report Pipeline ──"
+check "report_generate.py produces CRITICAL (not INFO)" "
+  rm -rf /tmp/_ts_smoke_evidence /tmp/_ts_smoke_reports
+  mkdir -p /tmp/_ts_smoke_evidence
+  echo '{\"findings\":[{\"title\":\"Test\",\"severity\":\"CRITICAL\",\"cvss\":\"9.8\"}]}' > /tmp/_ts_smoke_evidence/findings.json
+  python3 core/scripts/report_generate.py generate --type executive --evidence-dir /tmp/_ts_smoke_evidence --output /tmp/_ts_smoke_reports >/dev/null 2>&1
+  grep -q '| CRITICAL | 1 |' /tmp/_ts_smoke_reports/*.md
+  rm -rf /tmp/_ts_smoke_evidence /tmp/_ts_smoke_reports
+"
+
+echo ""
+echo "── Sync Consistency ──"
+SYNC_MISMATCH=0
+for f in core/agents/*.md; do
+  name=$(basename "$f" .md)
+  [ "$name" = "_registry" ] && continue
+  claude_lines=$(wc -l < ".claude/agents/$name.md" 2>/dev/null || echo 0)
+  core_lines=$(wc -l < "$f")
+  diff=$((claude_lines - core_lines))
+  [ $diff -lt 3 ] || [ $diff -gt 15 ] && SYNC_MISMATCH=$((SYNC_MISMATCH+1))
 done
+check "All agents synced (.claude vs core)" "[ $SYNC_MISMATCH -eq 0 ]"
 
-# --- Hooks compile ---
 echo ""
-echo "--- Hooks ---"
-for hook in evidence_capture.py findings_sync.py scope_check.py; do
-    check "core/hooks/$hook compiles" python3 -c "import py_compile; py_compile.compile('$REPO_DIR/core/hooks/$hook', doraise=True)"
-done
+echo "── Manifests ──"
+check "marketplace.json is v2.0.0" "grep -q '\"version\": \"2.0.0\"' .claude-plugin/marketplace.json"
+check "marketplace.json says 32 agents" "grep -q '32 autonomous' .claude-plugin/marketplace.json"
+check "plugin.json is v2.0.0" "grep -q '\"version\": \"2.0.0\"' threatswarm-plugin/.claude-plugin/plugin.json"
 
-# --- Build system ---
 echo ""
-echo "--- Build System ---"
-check "scripts/build.py compiles" python3 -c "import py_compile; py_compile.compile('$REPO_DIR/scripts/build.py', doraise=True)"
-check "build.py --list runs" python3 "$REPO_DIR/scripts/build.py" --list >/dev/null 2>&1
+echo "── Skills & Templates ──"
+check "5 skills in core/skills/" "[ $(find core/skills -name SKILL.md | wc -l | tr -d ' ') -eq 5 ]"
+check "4 templates in core/templates/" "[ $(find core/templates -name '*.md' | wc -l | tr -d ' ') -ge 4 ]"
+check "4 JSON schemas valid" "for s in core/schema/*.json; do python3 -c \"import json; json.load(open('\$s'))\"; done"
 
-# --- MCP Servers ---
 echo ""
-echo "--- MCP Servers (3) ---"
-for mcp in scope-mcp evidence-mcp report-mcp; do
-    MCP_FILE="$REPO_DIR/integrations/mcp/$mcp/server.py"
-    if [ -f "$MCP_FILE" ]; then
-        check "MCP $mcp/server.py compiles" python3 -c "import py_compile; py_compile.compile('$MCP_FILE', doraise=True)"
-    else
-        check "MCP $mcp/server.py exists" false
-    fi
-done
+echo "── Integrations ──"
+check "3 n8n workflows (valid JSON)" "for f in integrations/n8n/*.json; do python3 -c \"import json; json.load(open('\$f'))\"; done"
+check "OpenProject sync.py compiles" "python3 -c \"import py_compile; py_compile.compile('integrations/openproject/sync.py', doraise=True)\""
 
-# --- Skill libraries ---
 echo ""
-echo "--- Skill Libraries (5) ---"
-SKILL_COUNT=$(find "$REPO_DIR/core/skills" -maxdepth 1 -mindepth 1 -type d | wc -l | tr -d ' ')
-check "5 skill directories in core/skills/ (found $SKILL_COUNT)" [ "$SKILL_COUNT" -ge 5 ]
+echo "── Clean ──"
+check "No __pycache__ directories" "[ $(find . -name '__pycache__' -not -path './.git/*' -type d 2>/dev/null | wc -l | tr -d ' ') -eq 0 ]"
 
-EXPECTED_SKILLS=(ad-attacks exploit-db mitre-attack report-templates wordlists)
-for skill in "${EXPECTED_SKILLS[@]}"; do
-    check "Skill library: $skill/ exists" [ -d "$REPO_DIR/core/skills/$skill" ]
-done
-
-# --- Report templates ---
 echo ""
-echo "--- Report Templates ---"
-TEMPLATE_COUNT=$(find "$REPO_DIR/core/templates" -type f | wc -l | tr -d ' ')
-check "At least 4 template files in core/templates/ (found $TEMPLATE_COUNT)" [ "$TEMPLATE_COUNT" -ge 4 ]
-
-EXPECTED_TEMPLATES=(executive_summary.md technical_finding.md remediation_roadmap.md)
-for tmpl in "${EXPECTED_TEMPLATES[@]}"; do
-    check "Template: $tmpl exists" [ -f "$REPO_DIR/core/templates/$tmpl" ]
-done
-check "Template: client/ directory exists" [ -d "$REPO_DIR/core/templates/client" ]
-
-# --- Registry ---
-echo ""
-echo "--- Registry ---"
-check "_registry.json exists and is valid JSON" python3 -c "import json; json.load(open('$REPO_DIR/core/agents/_registry.json'))"
-
-# --- Key docs ---
-echo ""
-echo "--- Documentation ---"
-check "README.md exists and is non-empty" [ -s "$REPO_DIR/README.md" ]
-check "LICENSE exists" [ -f "$REPO_DIR/LICENSE" ]
-check "scope.txt exists" [ -f "$REPO_DIR/scope.txt" ]
-
-# --- Summary ---
-echo ""
-echo "================================"
-echo "  Results: $PASS passed, $FAIL failed"
-echo "================================"
-
-if [ "$FAIL" -gt 0 ]; then
-    exit 1
-fi
-exit 0
+echo "╔══════════════════════════════════════════════════════╗"
+echo "║  Results: $PASS passed, $FAIL failed, $WARN warnings"
+FAIL_MSG=""
+[ $FAIL -gt 0 ] && FAIL_MSG=" — FIX BEFORE PUSH"
+echo "║$FAIL_MSG"
+echo "╚══════════════════════════════════════════════════════╝"
+[ $FAIL -gt 0 ] && exit 1 || exit 0

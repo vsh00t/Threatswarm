@@ -357,20 +357,35 @@ def handle_request(req):
     return make_error(-32601, f"Unknown method: {method}", req_id)
 
 
+def read_message(reader):
+    """Read a JSON-RPC message, supporting both Content-Length framing and newline-delimited JSON."""
+    line = reader.readline()
+    if not line:
+        return None
+    line = line.strip()
+
+    # Check for Content-Length header
+    if line.lower().startswith("content-length:"):
+        length = int(line.split(":")[1].strip())
+        # Read the empty line separator
+        reader.readline()
+        # Read exactly length bytes
+        data = reader.read(length)
+        return json.loads(data)
+
+    # Fallback: newline-delimited JSON
+    if line:
+        return json.loads(line)
+    return None
+
+
 def main():
     reader = os.fdopen(sys.stdin.fileno(), "r", encoding="utf-8", buffering=1)
-    for line in reader:
-        line = line.strip()
-        if not line:
-            continue
-        try:
-            req = json.loads(line)
-        except json.JSONDecodeError as exc:
-            response = make_error(-32700, f"Parse error: {exc}", None)
-            sys.stdout.write(json.dumps(response) + "\n")
-            sys.stdout.flush()
-            continue
 
+    while True:
+        req = read_message(reader)
+        if req is None:
+            break
         response = handle_request(req)
         if response is not None:
             sys.stdout.write(json.dumps(response) + "\n")

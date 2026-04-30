@@ -17,6 +17,8 @@ import argparse
 import json
 import os
 import re
+import shutil
+import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -54,7 +56,13 @@ def find_finding_files(evidence_dir: Path) -> list:
                         for item in data:
                             findings.append(("json", fpath, item))
                     elif isinstance(data, dict):
-                        findings.append(("json", fpath, data))
+                        # Handle {"findings": [...]} wrapper format
+                        findings_list = data.get("findings")
+                        if isinstance(findings_list, list):
+                            for item in findings_list:
+                                findings.append(("json", fpath, item))
+                        else:
+                            findings.append(("json", fpath, data))
                 except (json.JSONDecodeError, OSError):
                     pass
 
@@ -64,6 +72,13 @@ def find_finding_files(evidence_dir: Path) -> list:
             if fpath not in seen:
                 seen.add(fpath)
                 findings.append(("markdown", fpath, None))
+
+    # Text evidence files (nuclei, nessus, scan output)
+    for pattern in ["**/*.txt", "**/*.log", "**/*.nmap", "**/*.xml"]:
+        for fpath in evidence_dir.rglob(pattern):
+            if fpath not in seen:
+                seen.add(fpath)
+                findings.append(("text", fpath, None))
 
     return findings
 
@@ -166,6 +181,147 @@ def parse_markdown_findings(filepath: Path) -> list:
     return findings
 
 
+def parse_text_evidence(filepath: Path) -> list:
+    """Extract findings from text evidence files (nuclei, nessus, scan output).
+
+    Handles multiple formats:
+    - nuclei: [critical] CVE-2021-44228 Log4Shell RCE - http://10.10.10.5:8080
+    - nessus: severity numbers (4=Critical, 3=High, 2=Medium, 1=Low, 0=Info)
+    - free text: regex scan for severity keywords case-insensitive
+    """
+    findings = []
+    try:
+        content = filepath.read_text(encoding="utf-8", errors="ignore")
+    except OSError:
+        return findings
+
+    lines = content.splitlines()
+
+    # Nuclei-style: [severity] CVE-XXXX-XXXXX ... or [severity] title - url
+    nuclei_re = re.compile(
+        r"^\[(critical|high|medium|low|info)\]\s+(.+)$", re.IGNORECASE
+    )
+    # Nessus severity numbers (in Plugin Output or Nessus scan files)
+    nessus_sev_map = {"4": "CRITICAL", "3": "HIGH", "2": "MEDIUM", "1": "LOW", "0": "INFO"}
+    nessus_re = re.compile(
+        r"(?:Severity|severity|sev(?:erity)?)\s*[:=]\s*(\d)", re.IGNORECASE
+    )
+    # Free text severity scan
+    free_sev_re = re.compile(
+        r"\b(CRITICAL|HIGH|MEDIUM|LOW)\b", re.IGNORECASE
+    )
+
+    seen_titles = set()
+
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+
+        # Try nuclei format first
+        m = nuclei_re.match(line)
+        if m:
+            severity = m.group(1).upper()
+            rest = m.group(2).strip()
+            title = rest[:120]
+            # Extract CVE
+            cve = None
+            cve_m = re.search(r"\b(CVE-\d{4}-\d+)\b", rest)
+            if cve_m:
+                cve = cve_m.group(1)
+                # Use CVE + description as title
+                desc = rest[cve_m.end():].strip()
+                desc = re.sub(r"^\s*[-–—]\s*", "", desc)
+                title = f"{cve} - {desc}"[:120] if desc else cve
+            # Extract URL
+            url_m = re.search(r"(https?://\S+)", rest)
+            target = url_m.group(1) if url_m else None
+
+            if title not in seen_titles:
+                seen_titles.add(title)
+                findings.append({
+                    "id": None,
+                    "title": title,
+                    "severity": severity,
+                    "cvss_score": None,
+                    "cvss_vector": None,
+                    "attack_techniques": [],
+                    "cve": cve,
+                    "target": target,
+                    "description": line,
+                    "remediation": None,
+                    "steps_to_reproduce": None,
+                    "business_impact": None,
+                    "references": [],
+                    "evidence_path": None,
+                    "source_file": str(filepath),
+                    "source_format": "text",
+                    "content": line,
+                })
+            continue
+
+        # Try Nessus severity number
+        m_nessus = nessus_re.search(line)
+        if m_nessus:
+            sev_num = m_nessus.group(1)
+            severity = nessus_sev_map.get(sev_num)
+            if severity:
+                title = line[:120]
+                if title not in seen_titles:
+                    seen_titles.add(title)
+                    findings.append({
+                        "id": None,
+                        "title": title,
+                        "severity": severity,
+                        "cvss_score": None,
+                        "cvss_vector": None,
+                        "attack_techniques": [],
+                        "cve": None,
+                        "target": None,
+                        "description": line,
+                        "remediation": None,
+                        "steps_to_reproduce": None,
+                        "business_impact": None,
+                        "references": [],
+                        "evidence_path": None,
+                        "source_file": str(filepath),
+                        "source_format": "text",
+                        "content": line,
+                    })
+            continue
+
+        # Free text severity scan (only if no other format matched)
+        # Skip lines that are too short or look like headers/config
+        if len(line) > 20 and not line.startswith('#'):
+            m_free = free_sev_re.search(line)
+            if m_free:
+                severity = m_free.group(1).upper()
+                title = line[:120]
+                if title not in seen_titles:
+                    seen_titles.add(title)
+                    findings.append({
+                        "id": None,
+                        "title": title,
+                        "severity": severity,
+                        "cvss_score": None,
+                        "cvss_vector": None,
+                        "attack_techniques": [],
+                        "cve": None,
+                        "target": None,
+                        "description": line,
+                        "remediation": None,
+                        "steps_to_reproduce": None,
+                        "business_impact": None,
+                        "references": [],
+                        "evidence_path": None,
+                        "source_file": str(filepath),
+                        "source_format": "text",
+                        "content": line,
+                    })
+
+    return findings
+
+
 def _get_ci(d: dict, key: str, default=None):
     """Case-insensitive dict lookup."""
     if not d:
@@ -183,12 +339,28 @@ def parse_json_finding(data: dict) -> dict:
     Handles case-insensitive field names since evidence files may use
     "Severity", "SEVERITY", or "severity" interchangeably.
     """
-    raw_severity = _get_ci(data, "severity", "INFO")
+    raw_severity = _get_ci(data, "severity")
+    severity = str(raw_severity).upper() if raw_severity else "INFO"
+
+    # Validate severity: default to INFO only if not a recognized level
+    if severity not in SEVERITY_ORDER:
+        severity = "INFO"
+
+    # Handle CVSS: accept both "cvss" (string like "9.8") and "cvss_score" (number)
+    cvss_score = _get_ci(data, "cvss_score")
+    if cvss_score is None:
+        raw_cvss = _get_ci(data, "cvss")
+        if raw_cvss is not None:
+            try:
+                cvss_score = float(raw_cvss)
+            except (ValueError, TypeError):
+                cvss_score = None
+
     return {
         "id": _get_ci(data, "id"),
         "title": _get_ci(data, "title", "Untitled"),
-        "severity": str(raw_severity).upper(),
-        "cvss_score": _get_ci(data, "cvss_score"),
+        "severity": severity,
+        "cvss_score": cvss_score,
         "cvss_vector": _get_ci(data, "cvss_vector"),
         "attack_techniques": [_get_ci(data, "attack_technique")] if _get_ci(data, "attack_technique") else [],
         "cve": _get_ci(data, "cve"),
@@ -216,6 +388,9 @@ def collect_all_findings(evidence_dir: Path) -> list:
         elif source_type == "markdown":
             md_findings = parse_markdown_findings(filepath)
             all_findings.extend(md_findings)
+        elif source_type == "text":
+            txt_findings = parse_text_evidence(filepath)
+            all_findings.extend(txt_findings)
 
     # Sort by severity (descending) then by CVSS score (descending)
     all_findings.sort(
@@ -437,11 +612,376 @@ def generate_full_report(findings: list, evidence_dir: Path, output_dir: Path) -
     return output_file
 
 
+def markdown_to_html(md_content: str, title: str = "ThreatSwarm Report") -> str:
+    """Convert markdown content to a styled HTML document.
+
+    Uses a simple regex-based converter for basic markdown elements:
+    headings, bold, italic, code blocks, inline code, tables, lists, links.
+    """
+    html_body = md_content
+
+    # Escape HTML entities in the body (except what we'll convert)
+    # We do this selectively to avoid double-escaping
+
+    # Code blocks (fenced) — extract and protect first
+    code_blocks = []
+    def _protect_code(m):
+        idx = len(code_blocks)
+        lang = m.group(1) or ""
+        code = m.group(2)
+        # Escape HTML inside code
+        code_escaped = code.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+        code_blocks.append(f'<pre><code class="language-{lang}">{code_escaped}</code></pre>')
+        return f"__CODEBLOCK_{idx}__"
+    html_body = re.sub(r'```(\w*)\n(.*?)```', _protect_code, html_body, flags=re.DOTALL)
+
+    # Inline code
+    html_body = re.sub(
+        r'`([^`]+)`',
+        lambda m: f'<code>{m.group(1).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")}</code>',
+        html_body
+    )
+
+    # Escape remaining HTML entities
+    html_body = html_body.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+    # Restore code blocks
+    for idx, block in enumerate(code_blocks):
+        html_body = html_body.replace(f"__CODEBLOCK_{idx}__", block)
+
+    # Headings
+    html_body = re.sub(r'^### (.+)$', r'<h3>\1</h3>', html_body, flags=re.MULTILINE)
+    html_body = re.sub(r'^## (.+)$', r'<h2>\1</h2>', html_body, flags=re.MULTILINE)
+    html_body = re.sub(r'^# (.+)$', r'<h1>\1</h1>', html_body, flags=re.MULTILINE)
+
+    # Bold and italic
+    html_body = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', html_body)
+    html_body = re.sub(r'\*(.+?)\*', r'<em>\1</em>', html_body)
+
+    # Horizontal rules
+    html_body = re.sub(r'^---$', r'<hr>', html_body, flags=re.MULTILINE)
+
+    # Links
+    html_body = re.sub(r'\[([^\]]+)\]\(([^)]+)\)', r'<a href="\2">\1</a>', html_body)
+
+    # Unordered lists
+    html_body = re.sub(r'^- (.+)$', r'<li>\1</li>', html_body, flags=re.MULTILINE)
+    # Wrap consecutive <li> in <ul>
+    html_body = re.sub(r'((?:<li>.*?</li>\n?)+)', r'<ul>\1</ul>', html_body)
+
+    # Ordered lists
+    html_body = re.sub(r'^(\d+)\. (.+)$', r'<li>\2</li>', html_body, flags=re.MULTILINE)
+    # Wrap consecutive <li> from numbered items that aren't already in <ul>
+    html_body = re.sub(r'(?<!<ul>)((?:<li>.*?</li>\n?)+)(?!</ul>)', r'<ol>\1</ol>', html_body)
+
+    # Tables
+    lines = html_body.split('\n')
+    new_lines = []
+    in_table = False
+    table_rows = []
+    for line in lines:
+        stripped = line.strip()
+        if stripped.startswith('|') and stripped.endswith('|'):
+            # Skip separator rows (|---|---|)
+            if re.match(r'^\|[\s:-]+\|$', stripped):
+                continue
+            cells = [c.strip() for c in stripped.strip('|').split('|')]
+            row = '<tr>' + ''.join(f'<td>{c}</td>' for c in cells) + '</tr>'
+            table_rows.append(row)
+            in_table = True
+        else:
+            if in_table and table_rows:
+                # Make first row header
+                if table_rows:
+                    header_row = table_rows[0].replace('<td>', '<th>').replace('</td>', '</th>')
+                table_html = '<table><thead>' + header_row + '</thead><tbody>' + '\n'.join(table_rows[1:]) + '</tbody></table>'
+                new_lines.append(table_html)
+                table_rows = []
+                in_table = False
+            new_lines.append(line)
+    if in_table and table_rows:
+        header_row = table_rows[0].replace('<td>', '<th>').replace('</td>', '</th>')
+        table_html = '<table><thead>' + header_row + '</thead><tbody>' + '\n'.join(table_rows[1:]) + '</tbody></table>'
+        new_lines.append(table_html)
+    html_body = '\n'.join(new_lines)
+
+    # Paragraphs — wrap non-tag lines
+    html_body = re.sub(r'^(?!<[a-z/])(.*\S.*)$', r'<p>\1</p>', html_body, flags=re.MULTILINE)
+
+    # Clean up empty paragraphs
+    html_body = re.sub(r'<p>\s*</p>', '', html_body)
+
+    # Severity badge styling
+    SEVERITY_COLORS = {
+        "CRITICAL": "#e74c3c",
+        "HIGH": "#e67e22",
+        "MEDIUM": "#f1c40f",
+        "LOW": "#3498db",
+        "INFO": "#95a5a6",
+    }
+    for sev, color in SEVERITY_COLORS.items():
+        html_body = re.sub(
+            rf'\b({sev})\b',
+            f'<span class="severity-badge severity-{sev.lower()}">\1</span>',
+            html_body
+        )
+
+    CSS = """/* ThreatSwarm Report Styles */
+:root {
+    --bg-primary: #1a1a2e;
+    --bg-secondary: #16213e;
+    --bg-tertiary: #0f3460;
+    --text-primary: #e0e0e0;
+    --text-secondary: #b0b0b0;
+    --accent: #e94560;
+    --accent-secondary: #ff6b35;
+    --border: #2a2a4a;
+    --code-bg: #0d1117;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.6;
+    padding: 0;
+    margin: 0;
+}
+
+.report-header {
+    background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
+    border-bottom: 3px solid var(--accent);
+    padding: 40px;
+    text-align: center;
+}
+
+.report-header h1 {
+    font-size: 2.2em;
+    color: var(--accent);
+    margin-bottom: 8px;
+    letter-spacing: 2px;
+}
+
+.report-header .logo {
+    font-size: 1.1em;
+    color: var(--text-secondary);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+}
+
+.report-header .subtitle {
+    color: var(--text-secondary);
+    font-size: 0.95em;
+}
+
+.report-content {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 30px 40px;
+}
+
+h1 { color: var(--accent); font-size: 1.8em; margin: 30px 0 15px 0; border-bottom: 2px solid var(--border); padding-bottom: 8px; }
+h2 { color: var(--accent-secondary); font-size: 1.4em; margin: 25px 0 12px 0; }
+h3 { color: var(--text-primary); font-size: 1.2em; margin: 20px 0 10px 0; }
+
+p { margin: 8px 0; color: var(--text-primary); }
+
+strong { color: #ffffff; }
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+hr { border: none; border-top: 1px solid var(--border); margin: 30px 0; }
+
+/* Severity Badges */
+.severity-badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 0.85em;
+    letter-spacing: 0.5px;
+}
+.severity-critical { background: #e74c3c; color: #fff; }
+.severity-high { background: #e67e22; color: #fff; }
+.severity-medium { background: #f1c40f; color: #1a1a2e; }
+.severity-low { background: #3498db; color: #fff; }
+.severity-info { background: #95a5a6; color: #fff; }
+
+/* Tables */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 15px 0;
+    font-size: 0.9em;
+}
+thead th {
+    background: var(--bg-tertiary);
+    color: var(--accent);
+    text-align: left;
+    padding: 10px 14px;
+    border-bottom: 2px solid var(--accent);
+    font-weight: 600;
+}
+tbody td {
+    padding: 8px 14px;
+    border-bottom: 1px solid var(--border);
+}
+tbody tr:nth-child(even) { background: var(--bg-secondary); }
+tbody tr:hover { background: rgba(233, 69, 96, 0.08); }
+
+/* Code blocks */
+pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px;
+    overflow-x: auto;
+    margin: 12px 0;
+    font-size: 0.88em;
+}
+code {
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', 'JetBrains Mono', monospace;
+}
+pre code {
+    color: #c9d1d9;
+    background: none;
+    padding: 0;
+}
+/* Inline code */
+p code, li code, td code, th code {
+    background: var(--bg-tertiary);
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.88em;
+    color: var(--accent-secondary);
+}
+
+/* Lists */
+ul, ol { margin: 8px 0 8px 24px; }
+li { margin: 4px 0; color: var(--text-primary); }
+
+/* Print Styles */
+@media print {
+    body { background: #fff; color: #111; }
+    .report-header { background: #1a1a2e !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .report-header h1 { color: #e94560; }
+    .report-header .logo, .report-header .subtitle { color: #ccc; }
+    h1 { color: #c0392b; border-bottom-color: #ddd; }
+    h2 { color: #e67e22; }
+    h3 { color: #111; }
+    strong { color: #000; }
+    p { color: #222; }
+    li { color: #222; }
+    thead th { background: #2c3e50 !important; color: #ecf0f1 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    tbody td { color: #222; }
+    tbody tr:nth-child(even) { background: #f5f5f5 !important; }
+    pre { background: #f5f5f5 !important; border-color: #ddd; }
+    pre code { color: #333; }
+    p code, li code, td code, th code { background: #eee; color: #c0392b; }
+    .severity-badge { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .severity-critical { background: #e74c3c !important; color: #fff !important; }
+    .severity-high { background: #e67e22 !important; color: #fff !important; }
+    .severity-medium { background: #f1c40f !important; color: #1a1a2e !important; }
+    .severity-low { background: #3498db !important; color: #fff !important; }
+    .severity-info { background: #95a5a6 !important; color: #fff !important; }
+    table { page-break-inside: auto; }
+    tr { page-break-inside: avoid; page-break-after: auto; }
+    pre { page-break-inside: avoid; }
+    h1, h2, h3 { page-break-after: avoid; }
+    .report-content { max-width: 100%; padding: 20px; }
+    a { color: #c0392b; text-decoration: underline; }
+}
+
+/* Footer */
+.report-footer {
+    text-align: center;
+    padding: 20px;
+    color: var(--text-secondary);
+    font-size: 0.85em;
+    border-top: 1px solid var(--border);
+    margin-top: 40px;
+}
+"""
+
+    html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{title}</title>
+    <style>{CSS}</style>
+</head>
+<body>
+    <div class="report-header">
+        <div class="logo">🜏 ThreatSwarm</div>
+        <h1>{title}</h1>
+        <div class="subtitle">Penetration Test Report — Generated {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}</div>
+    </div>
+    <div class="report-content">
+        {html_body}
+    </div>
+    <div class="report-footer">
+        Generated by ThreatSwarm Report Generator v{__version__} &mdash; Confidential
+    </div>
+</body>
+</html>
+"""
+    return html
+
+
+def html_to_pdf(html_path: Path, pdf_path: Path) -> None:
+    """Convert HTML to PDF using wkhtmltopdf or pandoc."""
+    # Try wkhtmltopdf first
+    wkhtmltopdf = shutil.which("wkhtmltopdf")
+    if wkhtmltopdf:
+        cmd = [wkhtmltopdf, "--enable-local-file-access", "--page-size", "A4",
+               "--margin-top", "20mm", "--margin-bottom", "20mm",
+               "--margin-left", "15mm", "--margin-right", "15mm",
+               str(html_path), str(pdf_path)]
+        try:
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+            if result.returncode == 0:
+                return
+            print(f"[WARN] wkhtmltopdf failed (exit {result.returncode}): {result.stderr[:200]}", file=sys.stderr)
+        except (subprocess.TimeoutExpired, OSError) as e:
+            print(f"[WARN] wkhtmltopdf error: {e}", file=sys.stderr)
+
+    # Try pandoc
+    pandoc = shutil.which("pandoc")
+    if pandoc:
+        cmd = [pandoc, str(html_path), "-o", str(pdf_path),
+               "--pdf-engine=weasyprint", "--metadata", f"title={html_path.stem}"]
+        try:
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+            if result.returncode == 0:
+                return
+            # If weasyprint not available, try wkhtmltopdf engine
+            cmd2 = [pandoc, str(html_path), "-o", str(pdf_path),
+                    "--pdf-engine=wkhtmltopdf"]
+            result2 = subprocess.run(cmd2, capture_output=True, text=True, timeout=60)
+            if result2.returncode == 0:
+                return
+            print(f"[WARN] pandoc failed: {result.stderr[:200]}", file=sys.stderr)
+        except (subprocess.TimeoutExpired, OSError) as e:
+            print(f"[WARN] pandoc error: {e}", file=sys.stderr)
+
+    # Neither worked
+    print("[ERROR] PDF export requires wkhtmltopdf or pandoc. Install with:", file=sys.stderr)
+    print("        brew install wkhtmltopdf", file=sys.stderr)
+    print("        # or: brew install pandoc", file=sys.stderr)
+    sys.exit(1)
+
+
 def cmd_generate(args: argparse.Namespace) -> None:
     """Handle the 'generate' subcommand."""
     evidence_dir = Path(args.evidence_dir)
     output_dir = Path(args.output)
     report_type = args.type
+    export_format = args.format
 
     if not evidence_dir.exists():
         print(f"[ERROR] Evidence directory not found: {evidence_dir}", file=sys.stderr)
@@ -462,18 +1002,47 @@ def cmd_generate(args: argparse.Namespace) -> None:
             if sev in sev_counts:
                 print(f"  {sev}: {sev_counts[sev]}")
 
+    # Always generate markdown first
     if report_type == "executive":
-        output = generate_executive_report(findings, evidence_dir, output_dir)
+        md_output = generate_executive_report(findings, evidence_dir, output_dir)
     elif report_type == "technical":
-        output = generate_technical_report(findings, evidence_dir, output_dir)
+        md_output = generate_technical_report(findings, evidence_dir, output_dir)
     elif report_type == "full":
-        output = generate_full_report(findings, evidence_dir, output_dir)
+        md_output = generate_full_report(findings, evidence_dir, output_dir)
     else:
         print(f"[ERROR] Unknown report type: {report_type}. Use: executive, technical, full", file=sys.stderr)
         sys.exit(1)
 
-    print(f"[REPORT] Generated: {output}")
-    print(f"        Size: {output.stat().st_size:,} bytes")
+    print(f"[REPORT] Markdown generated: {md_output}")
+    print(f"        Size: {md_output.stat().st_size:,} bytes")
+
+    if export_format == "markdown":
+        return
+
+    # Read the generated markdown
+    md_content = md_output.read_text(encoding="utf-8")
+    stem = md_output.stem  # e.g., "executive_summary_20260430_104500"
+
+    if export_format in ("html", "pdf"):
+        # Convert to HTML
+        report_title = {
+            "executive": "Executive Summary — Penetration Test Report",
+            "technical": "Technical Findings Report",
+            "full": "Penetration Test Report — Full",
+        }.get(report_type, "ThreatSwarm Report")
+
+        html_content = markdown_to_html(md_content, title=report_title)
+        html_path = output_dir / f"{stem}.html"
+        html_path.write_text(html_content, encoding="utf-8")
+        print(f"[REPORT] HTML generated: {html_path}")
+        print(f"        Size: {html_path.stat().st_size:,} bytes")
+
+        if export_format == "pdf":
+            pdf_path = output_dir / f"{stem}.pdf"
+            print(f"[REPORT] Converting to PDF...")
+            html_to_pdf(html_path, pdf_path)
+            print(f"[REPORT] PDF generated: {pdf_path}")
+            print(f"        Size: {pdf_path.stat().st_size:,} bytes")
 
 
 def main():
@@ -494,6 +1063,8 @@ def main():
                        help="Evidence directory path (default: ./evidence)")
     p_gen.add_argument("--output", default="./reports",
                        help="Output directory for generated reports (default: ./reports)")
+    p_gen.add_argument("--format", default="markdown", choices=["markdown", "html", "pdf"],
+                       help="Output format: markdown (default), html, or pdf")
     p_gen.set_defaults(func=cmd_generate)
 
     args = parser.parse_args()

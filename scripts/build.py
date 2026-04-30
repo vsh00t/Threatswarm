@@ -194,6 +194,14 @@ def build_claude_code(registry):
     claude_md = generate_claude_md(registry)
     (ADAPTERS_DIR / "claude-code" / "CLAUDE.md").write_text(claude_md, encoding="utf-8")
 
+    # Copy settings.json
+    src_settings = BASE_DIR / ".claude" / "settings.json"
+    if src_settings.exists():
+        dst = ADAPTERS_DIR / "claude-code" / ".claude" / "settings.json"
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        dst.write_text(src_settings.read_text(encoding="utf-8"), encoding="utf-8")
+        print(f"    ✓ settings.json copied to claude-code adapter")
+
     print(f"  ✓ Claude Code adapter: {len(registry['agents'])} agents, {len(commands)} commands, {len(rules)} rules")
 
 

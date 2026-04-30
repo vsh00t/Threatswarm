@@ -12,135 +12,55 @@ No external dependencies — Python stdlib only.
 
 import json
 import sys
-import ipaddress
 import os
-import re
+
+# Shared scope logic
+from core.lib.scope_lib import (
+    load_scope,
+    extract_targets,
+    is_localhost,
+    check_scope,
+    format_scope_result,
+    is_network_command,
+    SCOPE_FILE_DEFAULT,
+)
+
+import ipaddress
 
 
 # ---------------------------------------------------------------------------
-# Scope logic (adapted from core/hooks/scope_check.py)
+# read_message — supports both Content-Length framing and newline-delimited JSON
 # ---------------------------------------------------------------------------
 
-SCOPE_FILE_DEFAULT = "./scope.txt"
+def read_message(reader):
+    """Read a JSON-RPC message, supporting both Content-Length framing and newline-delimited JSON."""
+    line = reader.readline()
+    if not line:
+        return None
+    line = line.strip()
+
+    # Check for Content-Length header
+    if line.lower().startswith("content-length:"):
+        length = int(line.split(":")[1].strip())
+        # Read the empty line separator
+        reader.readline()
+        # Read exactly length bytes
+        data = reader.read(length)
+        return json.loads(data)
+
+    # Fallback: newline-delimited JSON
+    if line:
+        return json.loads(line)
+    return None
 
 
-def load_scope(scope_file: str) -> list:
-    """Load scope entries, return list of (kind, entry) tuples."""
-    entries = []
-    try:
-        with open(scope_file, encoding="utf-8") as fh:
-            for raw_line in fh:
-                line = raw_line.strip()
-                if not line or line.startswith("#"):
-                    continue
-                try:
-                    network = ipaddress.ip_network(line, strict=False)
-                    entries.append(("network", network))
-                    continue
-                except ValueError:
-                    pass
-                try:
-                    addr = ipaddress.ip_address(line)
-                    entries.append(("network", ipaddress.ip_network(f"{addr}/32", strict=False)))
-                    continue
-                except ValueError:
-                    pass
-                entries.append(("domain", line.lower()))
-    except FileNotFoundError:
-        pass
-    return entries
+# ---------------------------------------------------------------------------
+# MCP tool implementations
+# ---------------------------------------------------------------------------
 
-
-def _extract_targets(command: str) -> tuple:
-    """Extract IPv4 addresses and hostnames from a shell command."""
-    ip_pattern = (
-        r"\b(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.)"
-        r"{3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\b"
-    )
-    ips = re.findall(ip_pattern, command)
-
-    host_pattern = (
-        r"(?:(?<=\s)|(?<=\=)|(?<=\t)|(?:^))(?!-)"
-        r"(?:[a-zA-Z0-9](?:[a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+"
-        r"(?:[a-zA-Z]{2,})"
-        r"(?=\s|$|/|:)"
-    )
-    hosts = re.findall(host_pattern, command, re.MULTILINE)
-
-    fp_patterns = [
-        r"^\d+\.\d+$", r"^\d+\.\d+\.\d+$", r"^v\d",
-        r"\.(log|txt|py|sh|md|json|yaml|yml|conf|rule|xml|cfg|ini|toml|"
-        r"rb|go|c|cpp|h|so|dll|exe|bin|pcap|cap|zip|gz|tar|bak|old|orig|swp)$",
-        r"^\.", r"^localhost\.", r"^[a-z_][a-z_0-9]*\.[a-z_]",
-    ]
-    filtered = []
-    for h in hosts:
-        h = h.strip()
-        if not h:
-            continue
-        if any(re.search(p, h, re.IGNORECASE) for p in fp_patterns):
-            continue
-        filtered.append(h)
-    return ips, filtered
-
-
-def _is_localhost(target: str) -> bool:
-    local_vals = {"localhost", "127.0.0.1", "::1", "0.0.0.0"}
-    if target in local_vals:
-        return True
-    try:
-        addr = ipaddress.ip_address(target)
-        return addr.is_loopback or addr == ipaddress.ip_address("0.0.0.0")
-    except ValueError:
-        return target.lower() in ("localhost", "localhost.localdomain")
-
-
-def _is_in_scope(target: str, scope_entries: list) -> bool:
-    if _is_localhost(target):
-        return True
-    try:
-        ip = ipaddress.ip_address(target)
-        for kind, entry in scope_entries:
-            if kind == "network" and ip in entry:
-                return True
-        return False
-    except ValueError:
-        pass
-    tgt = target.lower().rstrip(".")
-    for kind, entry in scope_entries:
-        if kind == "domain":
-            if tgt == entry or tgt.endswith("." + entry):
-                return True
-    return False
-
-
-def _is_network_command(command: str) -> bool:
-    tools = [
-        r"\bnmap\b", r"\bnuclei\b", r"\bhttpx\b", r"\bferoxbuster\b",
-        r"\bffuf\b", r"\bgobuster\b", r"\bnikto\b", r"\bsqlmap\b",
-        r"\bhydra\b", r"\bmedusa\b", r"\bcrackmapexec\b", r"\bcme\b",
-        r"\bsmbclient\b", r"\brpcclient\b", r"\benum4linux\b",
-        r"\bsubfinder\b", r"\bamass\b", r"\btheHarvester\b", r"\bshodan\b",
-        r"\bresponder\b", r"\bbettercap\b", r"\barpspoof\b", r"\bntlmrelayx\b",
-        r"\bbloodhound\b", r"\bcertipy\b", r"\bevil-winrm\b",
-        r"\bwmiexec\b", r"\bpsexec\b", r"\bsmbexec\b",
-        r"\bssh\b", r"\bsftp\b", r"\bftp\b", r"\btelnet\b",
-        r"\bnetcat\b", r"\bncat\b", r"\bnc\b",
-        r"\bcurl\b", r"\bwget\b", r"\bmsfconsole\b", r"\bmsfvenom\b",
-        r"\bsliver\b", r"\bairodump-ng\b", r"\baireplay-ng\b",
-        r"\breaver\b", r"\bhostapd\b", r"\btcpdump\b", r"\btshark\b",
-        r"\bwireshark\b", r"\bfrida\b", r"\badb\b", r"\bmosquitto\b",
-        r"\bimpacket-\w+", r"\bkerbrute\b", r"\bldapsearch\b",
-        r"\bldapdomaindump\b", r"\brpcscan\b", r"\bsmbmap\b", r"\bnetexec\b",
-        r"\bdalfox\b", r"\barjun\b", r"\bgrpcurl\b",
-    ]
-    cmd_lower = command.lower()
-    return any(re.search(p, cmd_lower) for p in tools)
-
-
-def check_command(command: str, scope_file: str = SCOPE_FILE_DEFAULT) -> dict:
+def check_command_scope(command: str, scope_file: str = SCOPE_FILE_DEFAULT) -> dict:
     """Validate a command against scope. Returns result dict."""
-    if not _is_network_command(command):
+    if not is_network_command(command):
         return {
             "in_scope": True,
             "target": None,
@@ -159,7 +79,7 @@ def check_command(command: str, scope_file: str = SCOPE_FILE_DEFAULT) -> dict:
             "detail": f"Scope file '{scope_file}' is empty or missing — all targets unverified",
         }
 
-    ips, hosts = _extract_targets(command)
+    ips, hosts = extract_targets(command)
     all_targets = ips + hosts
     if not all_targets:
         return {
@@ -170,8 +90,7 @@ def check_command(command: str, scope_file: str = SCOPE_FILE_DEFAULT) -> dict:
             "detail": "No network targets extracted from command",
         }
 
-    in_scope_targets = [t for t in all_targets if _is_in_scope(t, entries)]
-    out_of_scope = [t for t in all_targets if not _is_in_scope(t, entries)]
+    in_scope_targets, out_of_scope = check_scope(all_targets, entries)
 
     if out_of_scope:
         return {
@@ -303,7 +222,7 @@ TOOLS = [
 ]
 
 HANDLERS = {
-    "scope_check": lambda args: check_command(args["command"], args.get("scope_file", SCOPE_FILE_DEFAULT)),
+    "scope_check": lambda args: check_command_scope(args["command"], args.get("scope_file", SCOPE_FILE_DEFAULT)),
     "scope_list": lambda args: list_scope(args.get("scope_file", SCOPE_FILE_DEFAULT)),
     "scope_add": lambda args: add_target(args["target"], args.get("scope_file", SCOPE_FILE_DEFAULT)),
 }
@@ -368,21 +287,12 @@ def handle_request(req):
 
 def main():
     """MCP server main loop — read JSON-RPC from stdin, respond to stdout."""
-    buf = ""
     reader = os.fdopen(sys.stdin.fileno(), "r", encoding="utf-8", buffering=1)
 
-    for line in reader:
-        line = line.strip()
-        if not line:
-            continue
-        try:
-            req = json.loads(line)
-        except json.JSONDecodeError as exc:
-            response = make_error(-32700, f"Parse error: {exc}", None)
-            sys.stdout.write(json.dumps(response) + "\n")
-            sys.stdout.flush()
-            continue
-
+    while True:
+        req = read_message(reader)
+        if req is None:
+            break
         response = handle_request(req)
         if response is not None:
             sys.stdout.write(json.dumps(response) + "\n")

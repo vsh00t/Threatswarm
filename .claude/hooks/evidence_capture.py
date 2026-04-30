@@ -20,6 +20,7 @@ import hashlib
 import json
 import os
 import platform
+import shutil
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -88,17 +89,33 @@ def capture_screenshot(target: str, evidence_dir: Path, tool: str = "manual") ->
     filepath = screenshots_dir / filename
 
     system = platform.system()
+    capture_method = None
+
     if system == "Darwin":
+        capture_method = "screencapture"
         cmd = ["/usr/sbin/screencapture", "-x", str(filepath)]
     elif system == "Linux":
-        # Try scrot first, fall back to ImageMagick import
-        cmd = ["scrot", "-z", str(filepath)]
-        try:
-            result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
-            if result.returncode != 0:
-                cmd = ["import", "-window", "root", str(filepath)]
-        except FileNotFoundError:
-            cmd = ["import", "-window", "root", str(filepath)]
+        # Try tools in order of preference
+        linux_tools = [
+            ("grim", ["grim", str(filepath)]),                      # Wayland
+            ("scrot", ["scrot", "-z", str(filepath)]),              # X11
+            ("gnome-screenshot", ["gnome-screenshot", "-f", str(filepath)]),  # GNOME
+            ("import", ["import", "-window", "root", str(filepath)]),  # ImageMagick
+        ]
+        for tool_name, tool_cmd in linux_tools:
+            if shutil.which(tool_name):
+                capture_method = tool_name
+                cmd = tool_cmd
+                break
+        else:
+            # No tool found — suggest optional selenium/playwright
+            print(
+                "[ERROR] No screenshot tool found on Linux. "
+                "Install one of: grim (Wayland), scrot (X11), gnome-screenshot, or imagemagick. "
+                "For headless systems, selenium or playwright can be used with additional setup.",
+                file=sys.stderr,
+            )
+            sys.exit(1)
     else:
         print(f"[ERROR] Unsupported platform: {system}. Only macOS and Linux are supported.", file=sys.stderr)
         sys.exit(1)
@@ -106,7 +123,7 @@ def capture_screenshot(target: str, evidence_dir: Path, tool: str = "manual") ->
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=15)
         if result.returncode != 0:
-            print(f"[ERROR] Screenshot capture failed: {result.stderr.strip()}", file=sys.stderr)
+            print(f"[ERROR] Screenshot capture failed ({capture_method}): {result.stderr.strip()}", file=sys.stderr)
             sys.exit(1)
     except FileNotFoundError:
         print(f"[ERROR] Screenshot tool not found: {cmd[0]}. Install screencapture (macOS), scrot or imagemagick (Linux).", file=sys.stderr)
