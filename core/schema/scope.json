@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://threatswarm.dev/schemas/scope.json",
+  "title": "ThreatSwarm Scope Definition",
+  "description": "Schema for engagement scope definitions",
+  "type": "object",
+  "required": ["targets", "engagement"],
+  "properties": {
+    "engagement": {
+      "type": "object",
+      "required": ["name", "client", "start_date", "end_date"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Engagement name (e.g., 'ACME External Pentest')"
+        },
+        "client": {
+          "type": "string",
+          "description": "Client company name"
+        },
+        "start_date": {
+          "type": "string",
+          "format": "date",
+          "description": "Engagement start date (YYYY-MM-DD)"
+        },
+        "end_date": {
+          "type": "string",
+          "format": "date",
+          "description": "Engagement end date (YYYY-MM-DD)"
+        },
+        "operator": {
+          "type": "string",
+          "description": "Operator or team performing the engagement"
+        },
+        "authorization_ref": {
+          "type": "string",
+          "description": "Reference to authorization document (SOW, ROE, contract)"
+        }
+      },
+      "additionalProperties": false
+    },
+    "targets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["type", "value"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["cidr", "hostname", "url", "ip", "range", "domain"],
+            "description": "Type of target"
+          },
+          "value": {
+            "type": "string",
+            "description": "Target value (IP, CIDR, domain, URL, etc.)"
+          },
+          "description": {
+            "type": "string",
+            "description": "Human-readable description of this target"
+          },
+          "exclusions": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Excluded IPs, hosts, or ranges within this target"
+          }
+        },
+        "additionalProperties": false
+      },
+      "minItems": 1,
+      "description": "List of authorized targets"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,61 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://threatswarm.dev/schemas/evidence.json",
+  "title": "ThreatSwarm Evidence Entry",
+  "description": "Schema for evidence collected during a penetration testing engagement",
+  "type": "object",
+  "required": ["id", "finding_ref", "type", "path", "collected_at"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^EVD-[0-9]+$",
+      "description": "Unique evidence identifier"
+    },
+    "finding_ref": {
+      "type": "string",
+      "pattern": "^TS-[0-9]+$",
+      "description": "Reference to the associated finding ID"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["screenshot", "command_output", "pcap", "log", "session_dump", "hash_dump", "web_response", "proof_of_concept", "other"],
+      "description": "Type of evidence"
+    },
+    "path": {
+      "type": "string",
+      "description": "Relative path to the evidence file within the evidence/ directory"
+    },
+    "collected_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC ISO 8601 timestamp when evidence was collected"
+    },
+    "tool": {
+      "type": "string",
+      "description": "Tool used to collect this evidence (e.g., nmap, sqlmap, burpsuite)"
+    },
+    "command": {
+      "type": "string",
+      "description": "Command executed to obtain this evidence"
+    },
+    "operator": {
+      "type": "string",
+      "description": "Operator who collected the evidence"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "SHA-256 hash of the evidence file for chain of custody"
+    },
+    "description": {
+      "type": "string",
+      "description": "Brief description of what this evidence shows"
+    },
+    "redacted": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether sensitive data in this evidence has been redacted"
+    }
+  },
+  "additionalProperties": false
+}

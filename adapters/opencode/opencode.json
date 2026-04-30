@@ -1,0 +1,7 @@
+{
+  "name": "threatswarm",
+  "version": "1.0.0",
+  "agents_dir": "core/agents",
+  "rules_dir": "core/rules",
+  "commands_dir": "core/commands"
+}

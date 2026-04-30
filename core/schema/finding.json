@@ -1,0 +1,88 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://threatswarm.dev/schemas/finding.json",
+  "title": "ThreatSwarm Finding",
+  "description": "Schema for a structured penetration testing finding",
+  "type": "object",
+  "required": ["id", "title", "severity", "target", "date", "attack_technique", "description", "evidence_path"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^TS-[0-9]+$",
+      "description": "Unique finding identifier (e.g., TS-0042)"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 5,
+      "description": "Short descriptive title of the finding"
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"],
+      "description": "Severity rating based on CVSS and business impact"
+    },
+    "target": {
+      "type": "string",
+      "description": "IP address, FQDN, or URL of the affected system"
+    },
+    "date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC ISO 8601 timestamp of discovery"
+    },
+    "cvss_score": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 10,
+      "description": "CVSS 3.1 base score"
+    },
+    "cvss_vector": {
+      "type": "string",
+      "pattern": "^CVSS:3\\.1/[A-Za-z]:[A-Za-z]",
+      "description": "Full CVSS 3.1 vector string"
+    },
+    "cwe": {
+      "type": "string",
+      "pattern": "^CWE-[0-9]+$",
+      "description": "CWE identifier"
+    },
+    "attack_technique": {
+      "type": "string",
+      "pattern": "^T[0-9]+(\\.[0-9]+)?$",
+      "description": "MITRE ATT&CK technique ID"
+    },
+    "description": {
+      "type": "string",
+      "minLength": 20,
+      "description": "Detailed description of the vulnerability or finding"
+    },
+    "business_impact": {
+      "type": "string",
+      "description": "Business impact assessment for non-technical stakeholders"
+    },
+    "steps_to_reproduce": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Ordered steps to reproduce the finding"
+    },
+    "evidence_path": {
+      "type": "string",
+      "description": "Relative path to supporting evidence files"
+    },
+    "remediation": {
+      "type": "string",
+      "description": "Specific, actionable remediation steps"
+    },
+    "references": {
+      "type": "array",
+      "items": { "type": "string", "format": "uri" },
+      "description": "External references (CVE, vendor advisory, OWASP, NIST)"
+    },
+    "cve": {
+      "type": "string",
+      "pattern": "^CVE-[0-9]{4}-[0-9]+$",
+      "description": "CVE identifier if a published CVE applies"
+    }
+  },
+  "additionalProperties": false
+}

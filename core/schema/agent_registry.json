@@ -1,0 +1,71 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://threatswarm.dev/schemas/agent_registry.json",
+  "title": "ThreatSwarm Agent Registry",
+  "description": "Schema for the agent registry metadata file",
+  "type": "object",
+  "required": ["version", "agents", "total"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Registry schema version"
+    },
+    "description": {
+      "type": "string",
+      "description": "Human-readable description of this registry"
+    },
+    "total": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Total number of agents in the registry"
+    },
+    "agents": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "description", "tags", "source_file"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]+$",
+            "description": "Machine-readable agent identifier (slug)"
+          },
+          "display_name": {
+            "type": "string",
+            "description": "Human-readable agent name from the H1 heading"
+          },
+          "description": {
+            "type": "string",
+            "minLength": 10,
+            "description": "Description of the agent's capabilities and purpose"
+          },
+          "triggers": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Keywords or phrases that should trigger this agent"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["offensive", "defensive", "recon", "malware", "compliance", "research", "reporting", "web", "network", "cloud", "containers", "mobile", "wireless", "api", "iot", "ad", "windows", "cryptography", "social-engineering", "evasion", "c2", "red-team", "osint", "enumeration", "exploitation", "initial-access", "post-exploitation", "privesc", "lateral-movement", "credential-access", "cracking", "threat-hunting", "detection", "forensics", "incident-response", "hardening", "logging", "siem", "vulnerability", "cve", "audit", "reverse-engineering", "analysis", "documentation", "general"]
+            },
+            "minItems": 1,
+            "description": "Category tags for the agent"
+          },
+          "recommended_model": {
+            "type": "string",
+            "description": "Recommended LLM model tier (e.g., sonnet, opus)"
+          },
+          "source_file": {
+            "type": "string",
+            "description": "Path to the agent's markdown definition file"
+          }
+        }
+      },
+      "minItems": 1
+    }
+  },
+  "additionalProperties": false
+}
