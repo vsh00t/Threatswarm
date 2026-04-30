@@ -46,6 +46,9 @@ credentials*
 *_credentials*
 *password*
 !.claude/agents/*password*
+!core/agents/*password*
+!threatswarm-plugin/agents/*password*
+!adapters/*/agents/*password*
 *passwd*
 apikeys*
 *.token
