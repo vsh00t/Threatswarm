@@ -1,6 +1,6 @@
 # ThreatSwarm — AI Penetration Testing Assistant
 
-> Generated 2026-04-30T14:53:12Z from core/ content. This file provides comprehensive pentesting context for GitHub Copilot.
+> Generated 2026-04-30T14:53:40Z from core/ content. This file provides comprehensive pentesting context for GitHub Copilot.
 
 ## ⚠️ CRITICAL: Scope Enforcement
 

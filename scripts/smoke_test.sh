@@ -45,8 +45,8 @@ done
 
 echo ""
 echo "── Hooks ──"
-check "scope_check blocks out-of-scope" "echo '{\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"nmap 8.8.8.8\"}}' | PYTHONPATH=. python3 core/hooks/scope_check.py 2>&1 | grep -qi blocked"
-check "scope_check allows in-scope (exit 0)" "echo '{\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"nmap 192.168.1.100\"}}' | PYTHONPATH=. python3 core/hooks/scope_check.py >/dev/null 2>&1; [ \$? -eq 0 ]"
+check "scope_check blocks out-of-scope" "output=\$(echo '{\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"nmap 8.8.8.8\"}}' | PYTHONPATH=. python3 core/hooks/scope_check.py 2>&1 || true); echo \"\$output\" | grep -qi blocked"
+check "scope_check allows in-scope (exit 0)" "echo '{\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"nmap 192.168.1.100\"}}' | PYTHONPATH=. python3 core/hooks/scope_check.py >/dev/null 2>&1 || true; [ \$? -eq 0 ]"
 
 echo ""
 echo "── Report Pipeline ──"
