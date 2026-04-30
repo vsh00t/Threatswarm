@@ -358,8 +358,8 @@ def build_opencode(registry):
     out_dir = ADAPTERS_DIR / "opencode"
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    # Copy static files: instructions.md, .opencode.json.template, setup.sh
-    static_files = ["instructions.md", ".opencode.json.template", "setup.sh"]
+    # Copy static files: instructions.md, .opencode.json, .opencode.json.template, README.md, setup.sh
+    static_files = ["instructions.md", ".opencode.json", ".opencode.json.template", "README.md", "setup.sh"]
     copied = []
     for fname in static_files:
         src = src_dir / fname

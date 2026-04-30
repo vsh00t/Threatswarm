@@ -1,0 +1,45 @@
+{
+  "providers": {
+    "anthropic": {
+      "disabled": false
+    },
+    "openai": {
+      "disabled": false
+    }
+  },
+  "agents": {
+    "coder": {
+      "model": "claude-sonnet-4-20250514",
+      "maxTokens": 8000
+    },
+    "task": {
+      "model": "claude-sonnet-4-20250514",
+      "maxTokens": 8000
+    }
+  },
+  "shell": {
+    "path": "/bin/bash",
+    "args": ["-l"]
+  },
+  "mcpServers": {
+    "threatswarm-scope": {
+      "type": "stdio",
+      "command": "python3",
+      "args": ["integrations/mcp/scope-mcp/server.py"],
+      "env": []
+    },
+    "threatswarm-evidence": {
+      "type": "stdio",
+      "command": "python3",
+      "args": ["integrations/mcp/evidence-mcp/server.py"],
+      "env": []
+    },
+    "threatswarm-report": {
+      "type": "stdio",
+      "command": "python3",
+      "args": ["integrations/mcp/report-mcp/server.py"],
+      "env": []
+    }
+  },
+  "autoCompact": true
+}
