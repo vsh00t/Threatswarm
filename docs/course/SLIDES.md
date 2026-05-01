@@ -3,7 +3,7 @@
 **Ironcybersec — Contenido de Presentación**
 
 > **Formato:** 8 horas | 4 asistentes | 80% demos en vivo, 20% teoría
-> **Plataformas:** OpenCode + Claude Code + ThreatSwarm v2.0
+> **Plataformas:** VS Code + GitHub Copilot (principal) · OpenCode + Z.AI (terminal) · Claude (limitado) · ThreatSwarm v2.0
 > **Instructor:** Jorge Moya (@vSh00t) — Ironcybersec
 > **Fecha:** [INSERTAR FECHA]
 > **Licencia:** Contenido confidencial de Ironcybersec. No redistribuir sin autorización.
@@ -64,9 +64,11 @@ Preguntas en cualquier momento. Si algo no queda claro en la demo, lo repetimos.
 
 Abril 2026. El ecosistema de agentes de IA para seguridad cambió drásticamente en los últimos 6 meses. Vean lo que pasó:
 
-Anthropic lanzó Claude Code, y su propio Frontier Red Team publicó resultados usando Claude para recon autónoma, explotación en CTFs, y análisis de vulnerabilidades — no como experimento, como flujo de trabajo productivo. GitHub Copilot evolucionó de autocompletar código a tener agentes autónomos que pueden ejecutar pentests completos.
+GitHub Copilot evolucionó de autocompletar código a tener agentes autónomos que pueden ejecutar pentests completos, con soporte nativo para MCP servers directamente en VS Code — esta es la plataforma principal que usaremos hoy.
 
-OpenCode (opencode.ai) emergió como alternativa open source — corre local con Ollama, soporta Claude, GPT, Gemini, y modelos locales. Es la base de frameworks como pentest-ai-agents de 0xSteph (28 subagentes especializados) y ThreatSwarm, que vamos a usar hoy.
+Anthropic lanzó Claude Code, y su propio Frontier Red Team publicó resultados usando Claude para recon autónoma, explotación en CTFs, y análisis de vulnerabilidades. Claude sigue siendo una opción válida, pero con rate limits más restrictivos que lo hacen menos práctico para sesiones largas de pentest.
+
+OpenCode (opencode.ai, migrado a charmbracelet/crush) emergió como alternativa terminal open source — soporta múltiples proveedores incluyendo Z.AI como LLM. Es la base de frameworks como pentest-ai-agents de 0xSteph (28 subagentes especializados) y ThreatSwarm, que vamos a usar hoy como alternativa en terminal.
 
 PortSwigger lanzó su MCP Server oficial para Burp Suite. Ahora Claude Code o cualquier cliente MCP puede hablar con Burp directamente — escaneo pasivo/activo, análisis de requests, todo via JSON-RPC. Esto es *huge*.
 
@@ -77,11 +79,11 @@ Pero no todo es color de rosa: White House bloqueó la expansión de Mythos (Ant
 **Visual:** Timeline vertical con logos/marcas. Flechas mostrando evolución: Claude Code (Oct 2025) → Burp MCP Server (Feb 2026) → pentest-ai-agents trending (Abr 2026) → Mythos bloqueada (Abr 2026).
 
 **Content:**
-- **Claude Code** (Anthropic, Oct 2025) — Agente de coding autónomo; Frontier Red Team usándolo para recon y CTF
-- **OpenCode** (opencode.ai) — Open source, soporta Claude/GPT/Gemini/Ollama, compatible con plugins
-- **GitHub Copilot Agents** — Evolución de autocompletar a agentes autónomos de seguridad
+- **VS Code + GitHub Copilot** (Microsoft/GitHub, 2025-2026) — Plataforma principal; agentes autónomos con MCP nativo, terminal integrado, Copilot Chat
+- **OpenCode + Z.AI** (opencode.ai / charmbracelet/crush) — Alternativa terminal open source, Z.AI como proveedor LLM, compatible con MCP
+- **Claude** (Anthropic) — Disponible pero con rate limits restrictivos; ideal para razonamiento complejo puntual
 - **Burp Suite MCP Server** (PortSwigger, Feb 2026) — Integración oficial Burp ↔ AI via MCP
-- **ThreatSwarm v2.0** (github.com/vsh00t/ThreatSwarm) — 32 agentes, kill-chain completo, OpenCode + Claude Code
+- **ThreatSwarm v2.0** (github.com/vsh00t/ThreatSwarm) — 32 agentes, kill-chain completo, VS Code Copilot + OpenCode + Z.AI
 - **pentest-ai-agents** (0xSteph, Abr 2026) — 28 subagentes Claude Code, trending en r/cybersecurity
 - **Mythos** (Anthropic) — Modelo de ciberseguridad avanzada; bloqueado por White House (Abr 2026)
 - **Ecosistema MCP** — Protocolo estándar de facto para tool-calling en agentes de seguridad
@@ -98,23 +100,23 @@ Pero no todo es color de rosa: White House bloqueó la expansión de Mythos (Ant
 
 MCP significa Model Context Protocol. Es un protocolo abierto creado por Anthropic, y en 2026 es el estándar *de facto* para que los modelos de IA hablen con herramientas externas. Piensen en MCP como USB-C para IA — un conector universal.
 
-La arquitectura es simple: tienes un **host** (Claude Code, OpenCode, Claude Desktop, cualquier cliente MCP) que se conecta a uno o más **servers** vía JSON-RPC 2.0. El transporte puede ser stdio (el más común — el host lanza el server como proceso hijo) o SSE (Server-Sent Events, para conexiones remotas vía HTTP).
+La arquitectura es simple: tienes un **host** (VS Code + Copilot, OpenCode, Claude Desktop, cualquier cliente MCP) que se conecta a uno o más **servers** vía JSON-RPC 2.0. VS Code + Copilot soporta MCP servers de forma nativa desde su configuración — no requiere proxy externo. El transporte puede ser stdio (el más común — el host lanza el server como proceso hijo) o SSE (Server-Sent Events, para conexiones remotas vía HTTP).
 
 Cada MCP server expone tres tipos de primitivas:
 - **Tools:** Funciones que el agente puede ejecutar. Ejemplo: `nmap_scan`, `sqlmap_exploit`, `frida_instrument`.
 - **Resources:** Datos estáticos que el agente puede leer. Ejemplo: scope files, configuraciones, diccionarios.
 - **Prompts:** Plantillas de prompts predefinidos para tareas específicas.
 
-El flujo real: el usuario le dice a Claude Code "escanea esta red". Claude Code decide que necesita usar Nmap. Busca un MCP server que tenga la tool `nmap_scan`. La invoca con los parámetros correctos. El server ejecuta Nmap localmente. Devuelve los resultados. Claude los interpreta y sugiere los siguientes pasos.
+El flujo real: el usuario le dice a Copilot en VS Code "escanea esta red". Copilot decide que necesita usar Nmap. Busca un MCP server que tenga la tool `nmap_scan`. La invoca con los parámetros correctos. El server ejecuta Nmap localmente. Devuelve los resultados. Copilot los interpreta y sugiere los siguientes pasos.
 
-Esto es diferente a simple function calling porque MCP es *descubrible* — el agente puede listar qué tools tiene disponibles y decidir dinámicamente cuál usar. No está hardcodeado.
+Esto es diferente a simple function calling porque MCP es *descubrible* — el agente puede listar qué tools tiene disponibles y decidir dinámicamente cuál usar. No está hardcodeado. En VS Code, Copilot descubre automáticamente los MCP servers configurados en `settings.json` o `.vscode/mcp.json`.
 
 **Visual:** Diagrama ASCII proyectado:
 
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                     AI HOST                            │
-│  (Claude Code / OpenCode / Claude Desktop / etc.)      │
+│  (VS Code Copilot / OpenCode / Claude Desktop / etc.)  │
 │                                                         │
 │  User Prompt → LLM Reasoning → Tool Selection           │
 └──────────┬──────────┬──────────┬───────────────────────┘
@@ -149,7 +151,9 @@ Esto es diferente a simple function calling porque MCP es *descubrible* — el a
 
 Ahora veamos MCP en la práctica. Esto no es teoría — son herramientas que están en producción y que vamos a usar hoy.
 
-**Burp Suite MCP Server (PortSwigger):** En febrero 2026, PortSwigger lanzó su MCP server oficial. Es una extensión de Burp que expone tools para que cualquier cliente MCP pueda interactuar con Burp — enviar requests, analizar respuestas, ejecutar scans pasivos/activos, consultar la base de datos de Burp. Se instala como BApp, se configura el endpoint, y Claude Code puede dirigir Burp.
+**Burp Suite MCP Server (PortSwigger):** En febrero 2026, PortSwigger lanzó su MCP server oficial. Es una extensión de Burp que expone tools para que cualquier cliente MCP pueda interactuar con Burp — enviar requests, analizar respuestas, ejecutar scans pasivos/activos, consultar la base de datos de Burp. Se instala como BApp, se configura el endpoint, y cualquier cliente MCP — VS Code Copilot, OpenCode, Claude — puede dirigir Burp.
+
+**VS Code + Copilot como host MCP:** Desde 2026, VS Code soporta MCP servers de forma nativa. Puedes configurar Burp MCP, Frida MCP, o cualquier server directamente en la configuración de Copilot. El agente de Copilot descubre las tools automáticamente y puede orquestar flujos de pentest sin salir del editor. Esta es la configuración principal que usaremos en el taller.
 
 Pero hay algo más interesante: **burp-ai-agent** de six2dez. No es solo un MCP proxy — es una extensión completa que añade 53+ tools MCP, 62 clases de vulnerabilidad con scanning pasivo y activo asistido por IA, y tres modos de privacidad (STRICT/BALANCED/OFF) que redactan datos sensibles antes de salir de Burp. Tiene audit logging con hashing SHA-256 para compliance.
 
@@ -163,8 +167,14 @@ Pero hay algo más interesante: **burp-ai-agent** de six2dez. No es solo un MCP 
 - **PortSwigger/mcp-server** (oficial, Feb 2026)
   - Extensión BApp para Burp Suite
   - Exposición de Burp via MCP (SSE + stdio proxy incluido)
-  - Compatible con Claude Desktop, Claude Code, cualquier cliente MCP
+  - Compatible con VS Code Copilot, Claude Desktop, OpenCode, cualquier cliente MCP
   - Repo: `github.com/PortSwigger/mcp-server`
+
+- **VS Code Copilot como host MCP** (Microsoft, 2026)
+  - Soporte nativo de MCP servers en VS Code
+  - Configuración vía `settings.json` o `.vscode/mcp.json`
+  - Copilot Chat descubre tools automáticamente
+  - Terminal integrada para ejecución de comandos
 
 - **burp-ai-agent** (six2dez, 2026)
   - 53+ herramientas MCP, 62 clases de vulnerabilidad
@@ -245,7 +255,7 @@ La lección: MCP es poderoso, pero la cadena de confianza LLM → MCP server →
 
 **Speaker Notes:**
 
-ThreatSwarm v2.0 es un framework de 32 agentes especializados para seguridad ofensiva, defensiva y recon. Funciona como plugin de Claude Code, o via OpenCode, o via OpenClaw. El diseño es simple: cada agente es un system prompt que sabe herramientas, técnicas y procedimientos específicos. El framework maneja scope enforcement, captura de evidencia, generación de reportes, y deployment multi-plataforma.
+ThreatSwarm v2.0 es un framework de 32 agentes especializados para seguridad ofensiva, defensiva y recon. Funciona como plugin de VS Code + Copilot, o via OpenCode con Z.AI, o via OpenClaw. El adapter de GitHub Copilot (`adapters/github-copilot/`) existe pero es minimal — se recomienda usar la integración MCP nativa de VS Code. El diseño es simple: cada agente es un system prompt que sabe herramientas, técnicas y procedimientos específicos. El framework maneja scope enforcement, captura de evidencia, generación de reportes, y deployment multi-plataforma.
 
 La distribución: 21 ofensivos, 7 defensivos, 2 de recon, 1 colaborativo (Purple Team), 1 de reportes. Cada uno mapeado a técnicas MITRE ATT&CK — hay 754 skills mapeadas en total.
 
@@ -265,8 +275,9 @@ El pipeline de reportes tiene 4 templates: executive_summary, technical_finding,
 ```
                     ┌──────────────┐
                     │  COORDINATOR  │
-                    │  (OpenCode /  │
-                    │  Claude Code) │
+                    │  (VS Code /   │
+                    │  Copilot /    │
+                    │  OpenCode)    │
                     └──────┬───────┘
                            │ delega
             ┌──────┬───────┼───────┬──────┐
@@ -298,7 +309,7 @@ El pipeline de reportes tiene 4 templates: executive_summary, technical_finding,
   - `scope-mcp` — 5 tools: validate, check, add, list, import scope
   - `evidence-mcp` — 4 tools: capture, get, list, export evidence
   - `report-mcp` — 4 tools: create, add finding, generate, get template
-- **Multi-plataforma:** Claude Code (CLAUDE.md), OpenCode (instructions.md), OpenClaw (SKILL.md), GitHub Copilot
+- **Multi-plataforma:** VS Code + Copilot (principal), OpenCode + Z.AI (terminal), Claude (limitado), OpenClaw (SKILL.md)
 - **Pipeline de reportes:** 4 templates — executive, technical, remediation, client deliverable
 - **Integraciones:** n8n workflows, OpenProject sync
 
@@ -430,7 +441,7 @@ El mensaje: no estamos en "los primeros experimentos". Estamos en la fase de com
 
 ---
 
-### Slide 10: Demo 1 — Pentest Web Completo con OpenCode + ThreatSwarm
+### Slide 10: Demo 1 — Pentest Web Completo con VS Code + Copilot + ThreatSwarm
 
 **Speaker Notes:**
 
@@ -459,11 +470,11 @@ Todo esto en menos de 30 minutos. Comparen con el flujo manual: al menos 4-6 hor
 
 **Importante:** Muestro la terminal completa. Cada comando, cada output. Nada es smoke and mirrors — si algo falla en vivo, lo debuggamos en vivo. Es parte del taller.
 
-**Visual:** Terminal completa en pantalla grande. OpenCode corriendo con output en tiempo real. DVWA en navegador secundario.
+**Visual:** VS Code con Copilot Chat a la derecha, terminal integrada abajo, DVWA en navegador secundario.
 
 **Content:**
 - **Target:** DVWA (Damn Vulnerable Web Application) en Docker local
-- **Plataforma:** OpenCode + ThreatSwarm v2.0
+- **Plataforma:** VS Code + GitHub Copilot + ThreatSwarm v2.0
 - **Flujo de la demo:**
   1. `scope-mcp`: `add_scope --target 192.168.1.100 --range dvwa.local`
   2. **Recon Specialist:** Nmap (-sV -sC -p-), clasificación de servicios
@@ -472,7 +483,7 @@ Todo esto en menos de 30 minutos. Comparen con el flujo manual: al menos 4-6 hor
   5. **report-mcp:** Generación de informe HTML con CVSS
 - **Tiempo estimado:** 20-30 minutos en vivo
 - **Lo que van a ver:**
-  - Terminal OpenCode con output real
+  - VS Code con Copilot Chat ejecutando comandos en tiempo real
   - Cada comando ejecutado y su resultado
   - Navegador con DVWA mostrando la explotación
   - Reporte HTML generado automáticamente
@@ -503,10 +514,11 @@ Lo importante aquí: Frida por sí solo requiere escribir JavaScript hooks manua
 
 frida-c2-mcp añade otro ángulo: control remoto de instrumentación. En un engagement real, puedes tener el device en la red del cliente y controlar la instrumentación desde tu máquina.
 
-**Visual:** Emulador Android en pantalla. Terminal con Frida hooks. Burp Suite mostrando tráfico HTTPS decifrado. MobSF report en navegador.
+**Visual:** VS Code con Copilot Chat, emulador Android, terminal con Frida hooks. Burp Suite mostrando tráfico HTTPS descifrado. MobSF report en navegador.
 
 **Content:**
 - **Target:** App Android vulnerable (InsecureBankv2 o similar) en emulator
+- **Plataforma:** VS Code + Copilot con Frida MCP integrado
 - **Herramientas:** Frida MCP (kahlo-mcp / dnakov/frida) + ThreatSwarm Mobile Attacker
 - **Flujo de la demo:**
   1. **Enumeración:** Listar activities, services, entry points de la APK
@@ -520,11 +532,11 @@ frida-c2-mcp añade otro ángulo: control remoto de instrumentación. En un enga
 
 ---
 
-### Slide 12: Demo 3 — Engagement Completo con /engage
+### Slide 12: Demo 3 — Engagement Completo con /engage (OpenCode + Z.AI)
 
 **Speaker Notes:**
 
-Tercera demo. El flujo completo de engagement — de la inicialización a la entrega del informe al cliente.
+Tercera demo. El flujo completo de engagement — de la inicialización a la entrega del informe al cliente. Para esta demo usaremos OpenCode con Z.AI como proveedor LLM, mostrando la alternativa terminal para engagements donde no necesitas la GUI de VS Code.
 
 ThreatSwarm tiene un workflow `/engage` que orquesta todo el engagement:
 1. Inicializa el proyecto con nombre del cliente
@@ -546,10 +558,11 @@ El output final: un archivo HTML profesional que puedes entregar directamente al
 
 Después de la demo, vamos a abrir el reporte generado y analizarlo. Van a ver la estructura, el nivel de detalle, y dónde pueden necesitar ajustar manualmente.
 
-**Visual:** OpenCode ejecutando `/engage`. Terminal mostrando progreso por fases. Navegador con el reporte HTML final.
+**Visual:** OpenCode en terminal ejecutando `/engage` con Z.AI como backend. Terminal mostrando progreso por fases. Navegador con el reporte HTML final.
 
 **Content:**
 - **Workflow `/engage`** — Orquestación automática de engagement completo
+- **Plataforma:** OpenCode + Z.AI (alternativa terminal)
 - **Target:** Lab multi-servicio (web app + API + servicio con credenciales débiles)
 - **Flujo automático:**
   1. Inicialización del proyecto
@@ -649,20 +662,44 @@ cd ThreatSwarm
 pip install -r requirements.txt
 ```
 
-**Paso 2: Instalar OpenCode**
-```bash
-# Via brew (macOS)
-brew install opencode
+**Paso 2: Configurar VS Code + GitHub Copilot**
+1. Instala VS Code (code.visualstudio.com)
+2. Instala la extensión GitHub Copilot
+3. Configura MCP servers en `.vscode/mcp.json`:
+```json
+{
+  "servers": {
+    "scope-mcp": {
+      "command": "uvx",
+      "args": ["--from", "integrations/mcp/scope-mcp", "scope-mcp"]
+    },
+    "evidence-mcp": {
+      "command": "uvx",
+      "args": ["--from", "integrations/mcp/evidence-mcp", "evidence-mcp"]
+    },
+    "report-mcp": {
+      "command": "uvx",
+      "args": ["--from", "integrations/mcp/report-mcp", "report-mcp"]
+    }
+  }
+}
+```
+4. Copilot descubre automáticamente los MCP servers al abrir el workspace
 
+**Paso 3: Instalar OpenCode (alternativa terminal)**
+```bash
+# Via Go
+GO111MODULE=on go install github.com/opencode-ai/opencode@latest
 # O via npm
 npm install -g opencode
 ```
 
-**Paso 3: Configurar OpenCode**
+**Paso 4: Configurar OpenCode con Z.AI**
 ```bash
 opencode init
-# Seleccionar Claude como provider (necesitan API key)
-# O configurar Ollama para modelos locales
+# Configurar Z.AI como proveedor LLM:
+# Z.AI API key desde z.ai
+# O usar Anthropic Claude (rate limits restrictivos)
 ```
 
 **Paso 4: Generar los adapters de ThreatSwarm para OpenCode**
@@ -705,13 +742,14 @@ Si llegaron hasta aquí sin errores, están listos para los ejercicios. Si hay e
 **Content:**
 - **Prerrequisitos:** Python 3.10+, Node.js 18+, Docker, Git, VS Code
 - **Paso 1:** `git clone https://github.com/vsh00t/ThreatSwarm.git && pip install -r requirements.txt`
-- **Paso 2:** Instalar OpenCode (`brew install opencode` o `npm install -g opencode`)
-- **Paso 3:** `opencode init` — Configurar provider (Claude API o Ollama local)
-- **Paso 4:** `python3 scripts/build.py --adapter opencode` — Generar adapters
-- **Paso 5:** Levantar MCP servers (scope-mcp, evidence-mcp, report-mcp)
-- **Paso 6:** `docker compose up -d dvwa` — Levantar lab objetivo
-- **Paso 7:** Configurar scope.txt con IPs/domains autorizados
-- **Paso 8:** Ejecutar `/recon --target localhost --port 8080` — Primer scan
+- **Paso 2:** Instalar VS Code + Copilot, configurar MCP servers en `.vscode/mcp.json`
+- **Paso 3:** Instalar OpenCode (`go install github.com/opencode-ai/opencode@latest`) como alternativa terminal
+- **Paso 4:** `opencode init` — Configurar provider (Z.AI API o Claude API)
+- **Paso 5:** `python3 scripts/build.py --adapter opencode` — Generar adapters
+- **Paso 6:** Levantar MCP servers (scope-mcp, evidence-mcp, report-mcp)
+- **Paso 7:** `docker compose up -d dvwa` — Levantar lab objetivo
+- **Paso 8:** Configurar scope.txt con IPs/domains autorizados
+- **Paso 9:** Primer scan — VS Code Copilot Chat o `/recon` en OpenCode
 
 ---
 
@@ -828,6 +866,11 @@ No todo es genial. Necesitan saber dónde falla esto y cuáles son los riesgos r
   - Modelos locales (Ollama) mitigan pero calidad inferior
   - *Mitigación:* Multi-provider support, abstracción de capa de modelo
 
+- **Rate limits de Claude (Anthropic):**
+  - Anthropic tiene los rate limits más restrictivos entre los proveedores principales
+  - En sesiones largas de pentest (4+ horas), es fácil golpear los límites
+  - *Mitigación:* Usar VS Code Copilot o Z.AI como proveedor principal, Claude solo para tareas puntuales de razonamiento complejo
+
 ---
 
 ### Slide 17: Roadmap 2026-2027 — Qué Viene
@@ -890,10 +933,12 @@ Dónde está esto yendo en los próximos 12-18 meses.
 - pentagi: `github.com/vxcontrol/pentagi` — Sistema autónomo multi-agente
 - appsecco/mcp-client-and-proxy — Proxy MCP para auditoría con Burp/ZAP
 
-**Documentación:**
-- MCP Protocol: `modelcontextprotocol.io` — Spec oficial
-- OpenCode: `opencode.ai/docs` — Documentación y ecosystem
-- Claude Code: `docs.anthropic.com/claude-code` — Setup y reference
+- **Documentación:**
+  - `modelcontextprotocol.io` — MCP Spec oficial
+  - `code.visualstudio.com/docs/copilot` — VS Code Copilot + MCP docs
+  - `opencode.ai/docs` — OpenCode docs y ecosystem
+  - `z.ai` — Z.AI LLM provider (proveedor para OpenCode)
+  - `docs.anthropic.com/claude-code` — Claude Code reference (limitado por rate limits)
 
 **Lectura recomendada:**
 - Anthropic Frontier Red Team blog (Feb 2026) — Uso de Claude para security testing
@@ -927,7 +972,9 @@ Ahora, preguntas. Tienen el resto de la sesión y mis contactos.
 
 - **Documentación:**
   - `modelcontextprotocol.io` — MCP Spec oficial
+  - `code.visualstudio.com/docs/copilot` — VS Code Copilot + MCP
   - `opencode.ai/docs` — OpenCode docs y ecosystem
+  - `z.ai` — Z.AI LLM provider
   - `docs.anthropic.com/claude-code` — Claude Code reference
 
 - **Lectura:**
@@ -948,7 +995,9 @@ Ahora, preguntas. Tienen el resto de la sesión y mis contactos.
 ### Preparación del Entorno
 
 - [ ] Docker con DVWA levantado y verificado (`docker compose up -d`)
-- [ ] OpenCode instalado y configurado con API key de Claude
+- [ ] VS Code con GitHub Copilot instalado y configurado
+- [ ] OpenCode instalado con Z.AI API key (alternativa terminal)
+- [ ] Claude API key disponible (uso limitado, rate limits restrictivos)
 - [ ] ThreatSwarm clonado, dependencias instaladas, adapters generados
 - [ ] MCP servers levantados (scope, evidence, report)
 - [ ] Emulador Android con InsecureBankv2 (para demo mobile)
@@ -965,8 +1014,9 @@ Ahora, preguntas. Tienen el resto de la sesión y mis contactos.
 
 ### Fallbacks
 
-- Si OpenCode falla → Claude Code CLI directo
-- Si Claude API tiene problemas → Ollama local (Llama 4 o Qwen 3)
+- Si VS Code Copilot falla → OpenCode + Z.AI en terminal
+- Si OpenCode falla → Claude Code CLI directo (rate limits limitan sesiones largas)
+- Si Z.AI tiene problemas → Claude API (limitado) o Ollama local (Llama 4 o Qwen 3)
 - Si Docker falla → VMs preconfiguradas
 - Si la red falla → Todo es local, no debería ser problema
 

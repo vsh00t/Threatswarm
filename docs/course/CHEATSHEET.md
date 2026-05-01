@@ -4,12 +4,34 @@
 
 ## Setup
 
+### Opción A — VS Code + GitHub Copilot (principal)
+
 ```
 git clone https://github.com/vsh00t/ThreatSwarm.git && cd ThreatSwarm
 sudo bash scripts/install_kali.sh
 python3 scripts/build.py --all
-export ANTHROPIC_API_KEY=sk-***
+# Instala GitHub Copilot extension en VS Code
+# Configura MCP servers en .vscode/mcp.json:
+# { "servers": { "scope-mcp": { "command": "uvx", "args": [...] } } }
+# Abre workspace en VS Code → Copilot Chat descubre tools automáticamente
+```
+
+### Opción B — OpenCode + Z.AI (terminal)
+
+```
+git clone https://github.com/vsh00t/ThreatSwarm.git && cd ThreatSwarm
+sudo bash scripts/install_kali.sh
+python3 scripts/build.py --all
+export ZAI_API_KEY=sk-***
 opencode -c .
+```
+
+### Opción C — Claude (limitado, rate limits restrictivos)
+
+```
+export ANTHROPIC_API_KEY=sk-***
+# Usar solo para tareas puntuales de razonamiento complejo
+# No recomendado para sesiones largas de pentest
 ```
 
 ---
@@ -111,7 +133,7 @@ python3 core/scripts/report_generate.py generate \
 - Verify `scope.txt` before every engagement
 - Use `--format html` for professional reports
 - Evidence auto-captures to `evidence/YYYYMMDD/`
-- Model: **sonnet** for most tasks, **opus** for complex exploitation
+- Model: **Z.AI** (OpenCode) o **VS Code Copilot** para la mayoría de tareas, **Claude** solo para razonamiento complejo puntual
 - Run `smoke_test.sh` after any update
 
 ---
@@ -139,16 +161,19 @@ python3 core/hooks/scope_check.py < input.json
 | Out of scope blocked | Add target to `scope.txt` |
 | Report shows INFO not CRITICAL | Update `findings.json` severity field |
 | Build fails | Delete `__pycache__`, run `build.py --all` |
-| Model timeout | Switch to haiku for simple tasks |
+| Model timeout | Switch to VS Code Copilot or lighter Z.AI model |
+| Claude rate limited | Switch to Z.AI or Copilot; Claude solo para tareas puntuales |
 
 ---
 
 ## Ecosystem 2026
 
+- **VS Code Copilot** — Agentes autónomos + MCP nativo en VS Code
+- **Z.AI** — LLM provider para OpenCode (z.ai)
 - **Burp MCP** — BApp Store (PortSwigger, Feb 2026)
 - **Frida MCP** — kahlo-mcp, frida-c2-mcp
 - **pentest-ai-agents** — github.com/0xSteph/pentest-ai-agents
-- **Claude Code Security** — anthropic.com/news/claude-code-security
+- **Claude Code Security** — anthropic.com/news/claude-code-security (rate limits restrictivos)
 
 ---
 
@@ -165,6 +190,7 @@ scripts/build.py        # Adapter generator
 scripts/smoke_test.sh   # Validation suite
 scripts/install_kali.sh # Kali installer
 adapters/opencode/      # OpenCode adapter
+adapters/github-copilot/ # GitHub Copilot adapter (minimal — usar MCP nativo de VS Code)
 ```
 
 ---

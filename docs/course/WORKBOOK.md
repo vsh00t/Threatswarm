@@ -70,9 +70,9 @@ Este taller te enseña a usar agentes de IA como fuerza multiplicadora en pentes
 | Familiaridad con Kali Linux | Navegación CLI, paquetes apt, servicios |
 | Conocimiento de protocolos | TCP/IP, HTTP, DNS, SMB a nivel práctico |
 | Python básico | Lectura de scripts, modificación de variables |
-| API key de LLM | Anthropic Claude o OpenAI (necesaria antes del taller) |
+| API key de LLM | Z.AI (primaria) o Anthropic Claude (limitada) — necesaria antes del taller |
 
-> ⚠️ **Antes del taller:** asegúrate de tener tu API key configurada. Sin ella, los agentes no funcionan. Las instrucciones están en la Sección 2.3.
+> ⚠️ **Antes del taller:** asegúrate de tener tu API key configurada. Sin ella, los agentes no funcionan. La configuración recomendada es Z.AI como proveedor principal (via OpenCode o VS Code Copilot). Anthropic Claude está disponible pero tiene rate limits restrictivos que pueden afectar sesiones largas. Las instrucciones están en la Sección 2.3.
 
 ### Agenda del Taller (8 horas)
 
@@ -146,24 +146,26 @@ El instructor proporciona las siguientes VMs (preconfiguradas en VirtualBox/VMwa
 
 Necesitas una API key de uno de estos proveedores:
 
-| Proveedor | Plan mínimo | Registro |
-|-----------|-------------|----------|
-| Anthropic Claude | Claude Pro ($20/mes) | console.anthropic.com |
-| OpenAI | Pay-as-you-go | platform.openai.com |
+| Proveedor | Plan mínimo | Registro | Notas |
+|-----------|-------------|----------|------|
+| **Z.AI** (recomendado) | Pay-as-you-go | z.ai | Proveedor principal para OpenCode |
+| GitHub Copilot | Copilot Pro/Enterprise | github.com/features/copilot | Integrado en VS Code, mejor UX |
+| Anthropic Claude | Claude Pro ($20/mes) | console.anthropic.com | Rate limits restrictivos, uso limitado |
 
-**Importante:** Calcula un presupuesto de $5-15 USD en API usage para el taller completo. Los agentes usan Claude Haiku para tareas rutinarias (barato) y Sonnet para análisis complejos.
+**Importante:** Calcula un presupuesto de $5-15 USD en API usage para el taller completo. VS Code Copilot no consume API usage propio de terceros (incluido en la suscripción). OpenCode con Z.AI consume según el modelo elegido. Claude tiene rate limits restrictivos — úsalo solo para tareas puntuales de razonamiento complejo.
 
 ```bash
-# Exportar API key (elige UNA)
+# Exportar API key — Z.AI (recomendado para OpenCode)
+export ZAI_API_KEY="tu-key-aqui"
+
+# O Anthropic Claude (limitado por rate limits)
 export ANTHROPIC_API_KEY="sk-ant-api03-tu-key-aqui"
-# O
-export OPENAI_API_KEY="sk-tu-key-aqui"
 ```
 
 Persiste la variable en tu shell:
 
 ```bash
-echo 'export ANTHROPIC_API_KEY="sk-ant-api03-tu-key-aqui"' >> ~/.bashrc
+echo 'export ZAI_API_KEY="tu-key-aqui"' >> ~/.bashrc
 source ~/.bashrc
 ```
 
@@ -227,7 +229,7 @@ python3 scripts/build.py --all
 [build] Building adapter: claude-code     ... OK
 [build] Building adapter: opencode        ... OK
 [build] Building adapter: openclaw        ... OK
-[build] Building adapter: github-copilot  ... OK
+[build] Building adapter: github-copilot  ... OK (minimal — usar MCP nativo de VS Code)
 [build] All adapters built successfully.
 ```
 
@@ -251,9 +253,9 @@ bash scripts/smoke_test.sh
 
 ---
 
-### 2.3 Configuración de OpenCode
+### 2.3 Configuración de OpenCode con Z.AI
 
-OpenCode es el cliente de agentes de IA que usaremos durante el taller.
+OpenCode es el cliente de agentes de IA terminal que usaremos durante el taller como alternativa a VS Code + Copilot. Se configura con Z.AI como proveedor LLM principal.
 
 #### Instalación en Kali Linux
 
@@ -261,20 +263,20 @@ OpenCode es el cliente de agentes de IA que usaremos durante el taller.
 # Instalar Go (si no está disponible)
 sudo apt install -y golang-go
 
-# Instalar OpenCode
-go install github.com/opencode-ai/opencode@latest
+# Instalar OpenCode (migrado a charmbracelet/crush)
+GO111MODULE=on go install github.com/opencode-ai/opencode@latest
 
 # Verificar
 opencode --version
 ```
 
-#### Configuración
+#### Configuración con Z.AI
 
 ```bash
 cd ~/ThreatSwarm
 cat > .opencode.json << 'EOF'
 {
-  "model": "anthropic/claude-sonnet-4-20250514",
+  "model": "zai/glm-5-turbo",
   "thinking": "interleaved",
   "mcpServers": {
     "scope-mcp": {
@@ -297,11 +299,11 @@ EOF
 #### Variables de Entorno
 
 ```bash
-# Para Anthropic Claude (recomendado)
-export ANTHROPIC_API_KEY="sk-ant-api03-tu-key-aqui"
+# Para Z.AI (recomendado)
+export ZAI_API_KEY="tu-key-aqui"
 
-# Para OpenAI (alternativa)
-# export OPENAI_API_KEY="sk-tu-key-aqui"
+# Para Anthropic Claude (alternativa, rate limits restrictivos)
+# export ANTHROPIC_API_KEY="sk-ant-api03-tu-key-aqui"
 ```
 
 #### Verificación
@@ -318,7 +320,7 @@ Escribe `/agents` dentro de OpenCode. Deberías ver 32 agentes listados.
 | Problema | Solución |
 |----------|----------|
 | `API key not found` | Verifica que exportaste la variable en la sesión actual |
-| `model not available` | Cambia el modelo en `.opencode.json` |
+| `model not available` | Cambia el modelo en `.opencode.json` (Z.AI o Claude) |
 | `MCP server failed` | Ejecuta manualmente: `uvx --from integrations/mcp/scope-mcp scope-mcp` |
 | `uvx: command not found` | `pip install uv` y reintenta |
 
@@ -531,6 +533,28 @@ El MCP Server de Burp expone las siguientes capacidades al agente de IA:
 | Lectura del sitio map | Target |
 | Intruder payloads | Intruder |
 
+#### Integración con VS Code Copilot
+
+VS Code soporta MCP servers de forma nativa. Crea un archivo `.vscode/mcp.json` en tu workspace:
+
+```json
+{
+  "servers": {
+    "burp": {
+      "command": "java",
+      "args": [
+        "-jar",
+        "/path/to/mcp-proxy-all.jar",
+        "--sse-url",
+        "http://127.0.0.1:9876"
+      ]
+    }
+  }
+}
+```
+
+Copilot descubre automáticamente el server y expone las tools en Copilot Chat.
+
 #### Integración con OpenCode
 
 Agrega el MCP server de Burp a tu `.opencode.json`:
@@ -556,7 +580,7 @@ Agrega el MCP server de Burp a tu `.opencode.json`:
 #### Flujo de Trabajo con Burp MCP
 
 ```
-Agente IA ←→ Burp MCP Server ←→ Burp Suite
+Agente IA (VS Code Copilot / OpenCode) ←→ Burp MCP Server ←→ Burp Suite
     │              │                    │
     │  "Escanea    │  HTTP request      │
     │   esta URL   │  al Scanner API    │
@@ -629,11 +653,27 @@ Edita `kahlo-mcp/config.json`:
 | `kahlo_artifacts_list` | Lista artefactos generados |
 | `kahlo_mcp_about` | Documentación completa del contrato operativo |
 
-**Configuración en OpenCode:**
+#### Configuración en OpenCode (Z.AI)
 
 ```json
 {
   "mcpServers": {
+    "frida-kahlo": {
+      "command": "node",
+      "args": ["/ruta/a/kahlo-mcp/dist/index.js"],
+      "cwd": "/ruta/a/kahlo-mcp"
+    }
+  }
+}
+```
+
+#### Configuración en VS Code Copilot
+
+Crea `.vscode/mcp.json`:
+
+```json
+{
+  "servers": {
     "frida-kahlo": {
       "command": "node",
       "args": ["/ruta/a/kahlo-mcp/dist/index.js"],
@@ -653,14 +693,18 @@ FridaC2MCP ejecuta **enteramente en el dispositivo** — no necesitas Frida tool
 - Zero client-side tooling: todo corre en el dispositivo
 - Transporte HTTP streamable (no USB directo necesario)
 - Composición con otros MCP servers (ej: Jadx-MCP para análisis estático)
-- Clientes recomendados: Gemini CLI, Claude Code
+- Clientes recomendados: VS Code Copilot, Claude Code, OpenCode
 
-**Registro en Claude Code / OpenCode:**
+**Plataformas recomendadas:** VS Code + Copilot (principal) o OpenCode + Z.AI (terminal). Claude está disponible pero con rate limits restrictivos.
+
+En VS Code, Copilot puede orquestar Frida MCP directamente desde Copilot Chat sin configuración adicional — solo agrega el server en `.vscode/mcp.json`.
+
+**Registro en OpenCode:**
 
 ```bash
 # Reemplaza <DEVICE_IP> con la IP LAN del dispositivo
 # Android (Termux)
-gemini mcp add --transport http frida-c2-mcp http://<DEVICE_IP>:6767/mcp
+opencode mcp add --transport http frida-c2-mcp http://<DEVICE_IP>:6767/mcp
 ```
 
 **Flujo de trabajo típico:**
@@ -710,9 +754,10 @@ ThreatSwarm asigna modelos de IA según la complejidad de la tarea:
 
 | Modelo | Uso | Características |
 |--------|-----|-----------------|
-| **Claude Haiku** | Tareas rutinarias, formateo, resúmenes | Rápido, económico |
-| **Claude Sonnet** | Análisis técnico, interpretación de resultados | Equilibrio calidad/costo |
-| **Claude Opus** | Planificación estratégica, generación de exploits | Máxima capacidad |
+| **Z.AI (OpenCode)** | Tareas en terminal, análisis general | Equilibrio calidad/costo, buena velocidad |
+| **VS Code Copilot** | Orquestación principal en VS Code | Integración nativa con MCP, mejor UX |
+| **Claude Haiku** | Tareas rutinarias, formateo, resúmenes | Rápido, económico (rate limits restrictivos) |
+| **Claude Sonnet** | Análisis técnico complejo (uso puntual) | Alta capacidad, pero limitado por rate limits |
 
 #### Modelo de Delegación
 
@@ -1036,7 +1081,14 @@ curl -s -o /dev/null -w "%{http_code}" http://192.168.56.101
 which nmap && which nuclei && which sqlmap
 ```
 
-#### Paso 2: Iniciar OpenCode (5 min)
+#### Paso 2: Iniciar el Agente (5 min)
+
+**Opción A — VS Code + Copilot (recomendado):**
+1. Abre VS Code con el workspace `~/ThreatSwarm`
+2. Abre Copilot Chat (panel derecho)
+3. Escribe en Copilot Chat: `/engage lab-01 --scope scope.txt --type web`
+
+**Opción B — OpenCode (terminal):**
 
 ```bash
 cd ~/ThreatSwarm
@@ -1201,7 +1253,7 @@ Edita `kahlo-mcp/config.json`:
 }
 ```
 
-Agrega a `.opencode.json`:
+Agrega a `.opencode.json` (o `.vscode/mcp.json` para VS Code Copilot):
 
 ```json
 {
@@ -1384,7 +1436,7 @@ Abre el reporte HTML y verifica:
 | Feature | ThreatSwarm | pentest-ai-agents | Burp MCP |
 |---------|-------------|-------------------|----------|
 | Agentes especializados | 32 | 31 | N/A (herramientas) |
-| Multi-plataforma | Claude + Copilot + OpenCode + OpenClaw | Claude Code only | Cualquier cliente MCP |
+| Multi-plataforma | VS Code Copilot + OpenCode + Claude + OpenClaw | Claude Code only | Cualquier cliente MCP |
 | MCP servers incluidos | 3 (scope, evidence, report) | 1 (pentest-ai MCP con 150+ tools) | 1 (Burp como herramienta) |
 | Dependencias | Cero (solo archivos .md) | Cero (solo archivos .md) | Java + Burp Suite Pro |
 | Enfoque | Framework completo | Subagentes especializados | Integración con Burp |
@@ -1438,7 +1490,9 @@ Abre el reporte HTML y verifica:
 
 - **ThreatSwarm Discussions:** github.com/vsh00t/ThreatSwarm/discussions
 - **pentest-ai-agents Issues:** github.com/0xSteph/pentest-ai-agents/issues
-- **Claude Code Community:** Anthropic Developer Forum
+- **VS Code Copilot Community:** github.com/microsoft/vscode-copilot
+- **OpenCode Community:** github.com/opencode-ai/opencode
+- **Z.AI:** z.ai — Documentación del proveedor LLM
 
 #### Conferencias
 
